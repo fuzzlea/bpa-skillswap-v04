@@ -71,3 +71,11 @@ export async function listRequestsForHost(): Promise<any[]> {
     if (!res.ok) throw new Error('Failed to load requests');
     return res.json();
 }
+
+export async function deleteSession(sessionId: number) {
+    const res = await authFetch(`${API_BASE}/sessions/${sessionId}`, {
+        method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete session');
+    return res.json();
+}

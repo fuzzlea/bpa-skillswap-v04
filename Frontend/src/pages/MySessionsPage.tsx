@@ -1,0 +1,241 @@
+import React, { useEffect, useState } from 'react';
+import { listSessions, createSession, deleteSession } from '../services/sessions';
+import { getSkills, getProfiles } from '../services/profile';
+import { getCurrentUser } from '../services/auth';
+
+export default function MySessionsPage() {
+  const [userSessions, setUserSessions] = useState<any[]>([]);
+  const [allSessions, setAllSessions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [userProfileId, setUserProfileId] = useState<number | null>(null);
+
+  // Form state
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [skillId, setSkillId] = useState<number | null>(null);
+  const [scheduledAt, setScheduledAt] = useState('');
+  const [duration, setDuration] = useState(60);
+  const [skills, setSkills] = useState<any[]>([]);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const currentUser = getCurrentUser();
+
+  useEffect(() => {
+    async function loadUserProfile() {
+      try {
+        const profiles = await getProfiles();
+        const userProfile = profiles.find((p: any) => p.userId === currentUser?.id);
+        if (userProfile) {
+          setUserProfileId(userProfile.id);
+        }
+      } catch (e) {
+        console.error('Failed to load user profile:', e);
+      }
+    }
+
+    loadUserProfile();
+    loadSessions();
+    loadSkills();
+  }, [currentUser?.id]);
+
+  async function loadSessions() {
+    try {
+      setLoading(true);
+      const allSess = await listSessions();
+      setAllSessions(allSess);
+
+      // Filter to sessions hosted by current user (we'll use userProfileId once loaded)
+      // For now, set empty and will refetch after userProfileId is determined
+      setUserSessions([]);
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Update sessions list when userProfileId is determined
+  useEffect(() => {
+    if (userProfileId !== null && allSessions.length > 0) {
+      const userHost = allSessions.filter(
+        (s: any) => s.hostProfileId === userProfileId
+      );
+      setUserSessions(userHost);
+    }
+  }, [userProfileId, allSessions]);
+
+  async function loadSkills() {
+    try {
+      const s = await getSkills();
+      setSkills(s);
+    } catch (e) {
+      console.error('Failed to load skills:', e);
+    }
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!scheduledAt) {
+      setFormError('Please choose a date and time for the session.');
+      return;
+    }
+    setFormLoading(true);
+    setFormError(null);
+    try {
+      const iso = new Date(scheduledAt).toISOString();
+      await createSession({
+        title,
+        description,
+        skillId,
+        scheduledAt: iso,
+        durationMinutes: duration,
+      } as any);
+
+      // Reset form and reload sessions
+      setTitle('');
+      setDescription('');
+      setSkillId(null);
+      setScheduledAt('');
+      setDuration(60);
+      setShowCreateForm(false);
+      await loadSessions();
+    } catch (err) {
+      setFormError((err as Error).message);
+    } finally {
+      setFormLoading(false);
+    }
+  }
+
+  async function handleDelete(sessionId: number) {
+    if (!confirm('Are you sure you want to delete this session?')) return;
+    try {
+      await deleteSession(sessionId);
+      await loadSessions();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  if (loading) return <div className="p-6">Loading sessions...</div>;
+
+  return (
+    <div className="p-6 bg-white rounded shadow space-y-6">
+      <h2 className="text-xl font-bold">My Sessions</h2>
+
+      {error && <div className="p-3 bg-red-100 text-red-700 rounded">{error}</div>}
+
+      {/* Create Session Button / Form */}
+      {!showCreateForm ? (
+        <button
+          onClick={() => setShowCreateForm(true)}
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Create New Session
+        </button>
+      ) : (
+        <div className="border p-4 rounded bg-gray-50">
+          <h3 className="font-semibold mb-3">Create New Session</h3>
+          {formError && <div className="p-2 bg-red-100 text-red-700 rounded mb-3">{formError}</div>}
+          <form onSubmit={handleCreate} className="space-y-3">
+            <input
+              className="w-full border p-2"
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+            <textarea
+              className="w-full border p-2"
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <select
+              className="w-full border p-2"
+              value={skillId ?? ''}
+              onChange={(e) => setSkillId(e.target.value ? Number(e.target.value) : null)}
+            >
+              <option value="">-- Select skill (optional) --</option>
+              {skills.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <input
+                required
+                type="datetime-local"
+                className="border p-2 flex-1"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+              />
+              <input
+                required
+                type="number"
+                min="1"
+                className="border p-2 w-24"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
+                disabled={formLoading}
+              >
+                {formLoading ? 'Creating...' : 'Create Session'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCreateForm(false)}
+                className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Sessions List */}
+      <div>
+        <h3 className="font-semibold mb-3">
+          {userSessions.length === 0 ? 'No sessions created yet' : `Your Sessions (${userSessions.length})`}
+        </h3>
+        <div className="space-y-3">
+          {userSessions.map((s) => (
+            <div key={s.id} className="border p-4 rounded hover:bg-gray-50">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="font-semibold text-lg">{s.title}</div>
+                  <div className="text-sm text-gray-600 mt-1">{s.description}</div>
+                  <div className="text-sm text-gray-500 mt-2">
+                    📅 {new Date(s.scheduledAt).toLocaleString()} • ⏱️ {s.durationMinutes} min
+                  </div>
+                  {s.skillName && (
+                    <div className="text-sm text-gray-500 mt-1">📚 Skill: {s.skillName}</div>
+                  )}
+                  <div className="text-sm text-gray-500 mt-1">
+                    Status: {s.isOpen ? '✅ Open' : '❌ Closed'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDelete(s.id)}
+                  className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 ml-2"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

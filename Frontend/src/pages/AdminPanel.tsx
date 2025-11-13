@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
 import type { User } from '../services/admin';
 import { getAllUsers, addUser, deleteUser, toggleAdminRole, getSummary } from '../services/admin';
+import { getProfiles } from '../services/profile';
+import { getRatingsForProfile, getAverageRating } from '../services/ratings';
 
 export default function AdminPanel() {
     const [users, setUsers] = useState<User[]>([]);
+    const [profiles, setProfiles] = useState<any[]>([]);
+    const [ratings, setRatings] = useState<Record<number, any[]>>({});
+    const [averages, setAverages] = useState<Record<number, number>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [summary, setSummary] = useState<any>(null);
     const [showAddModal, setShowAddModal] = useState(false);
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'users' | 'profiles'>('users');
 
     // Add user form state
     const [formData, setFormData] = useState({ userName: '', email: '', password: '', displayName: '' });
@@ -17,6 +23,7 @@ export default function AdminPanel() {
 
     useEffect(() => {
         loadUsers();
+        loadProfiles();
         loadSummary();
     }, []);
 
@@ -30,6 +37,29 @@ export default function AdminPanel() {
             setError(err.message ?? 'Failed to load users');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadProfiles = async () => {
+        try {
+            const p = await getProfiles();
+            setProfiles(p);
+
+            // Load ratings for each profile
+            const map: Record<number, any[]> = {};
+            const avgMap: Record<number, number> = {};
+            for (const prof of p) {
+                try {
+                    const r = await getRatingsForProfile(prof.id);
+                    map[prof.id] = r;
+                    const a = await getAverageRating(prof.id);
+                    avgMap[prof.id] = a;
+                } catch { }
+            }
+            setRatings(map);
+            setAverages(avgMap);
+        } catch (e) {
+            console.error('Failed to load profiles:', e);
         }
     };
 
@@ -86,7 +116,7 @@ export default function AdminPanel() {
         }
     };
 
-    if (loading) return <div className="p-6">Loading users...</div>;
+    if (loading) return <div className="p-6">Loading...</div>;
 
     return (
         <div className="p-6 bg-white rounded shadow">
@@ -101,61 +131,117 @@ export default function AdminPanel() {
                     </div>
                 </div>
             )}
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">User Management</h2>
+
+            {/* Tabs */}
+            <div className="flex gap-2 mb-6 border-b">
                 <button
-                    onClick={() => setShowAddModal(true)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    onClick={() => setActiveTab('users')}
+                    className={`px-4 py-2 font-semibold ${
+                        activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                    }`}
                 >
-                    Add User
+                    User Management
+                </button>
+                <button
+                    onClick={() => setActiveTab('profiles')}
+                    className={`px-4 py-2 font-semibold ${
+                        activeTab === 'profiles' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                    }`}
+                >
+                    All Profiles
                 </button>
             </div>
 
             {error && <div className="text-red-600 mb-4">{error}</div>}
 
-            {/* Users table */}
-            <div className="overflow-x-auto">
-                <table className="w-full border">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            <th className="border p-2 text-left">Username</th>
-                            <th className="border p-2 text-left">Email</th>
-                            <th className="border p-2 text-left">Display Name</th>
-                            <th className="border p-2 text-left">Admin</th>
-                            <th className="border p-2 text-left">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map(user => (
-                            <tr key={user.id} className="hover:bg-gray-50">
-                                <td className="border p-2">{user.userName}</td>
-                                <td className="border p-2">{user.email}</td>
-                                <td className="border p-2">{user.displayName || '—'}</td>
-                                <td className="border p-2">
-                                    <label className="flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={user.roles.includes('Admin')}
-                                            onChange={() => handleToggleAdmin(user.id, user.roles)}
-                                            className="mr-2"
-                                        />
-                                        <span>{user.roles.includes('Admin') ? 'Yes' : 'No'}</span>
-                                    </label>
-                                </td>
-                                <td className="border p-2">
-                                    <button
-                                        onClick={() => handleDeleteUser(user.id)}
-                                        disabled={deleting === user.id}
-                                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 disabled:opacity-50"
-                                    >
-                                        {deleting === user.id ? 'Deleting…' : 'Delete'}
-                                    </button>
-                                </td>
-                            </tr>
+            {/* Users Tab */}
+            {activeTab === 'users' && (
+                <>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold">User Management</h2>
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                            Add User
+                        </button>
+                    </div>
+
+                    {/* Users table */}
+                    <div className="overflow-x-auto">
+                        <table className="w-full border">
+                            <thead className="bg-gray-100">
+                                <tr>
+                                    <th className="border p-2 text-left">Username</th>
+                                    <th className="border p-2 text-left">Email</th>
+                                    <th className="border p-2 text-left">Display Name</th>
+                                    <th className="border p-2 text-left">Admin</th>
+                                    <th className="border p-2 text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {users.map(user => (
+                                    <tr key={user.id} className="hover:bg-gray-50">
+                                        <td className="border p-2">{user.userName}</td>
+                                        <td className="border p-2">{user.email}</td>
+                                        <td className="border p-2">{user.displayName || '—'}</td>
+                                        <td className="border p-2">
+                                            <label className="flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={user.roles.includes('Admin')}
+                                                    onChange={() => handleToggleAdmin(user.id, user.roles)}
+                                                    className="mr-2"
+                                                />
+                                                <span>{user.roles.includes('Admin') ? 'Yes' : 'No'}</span>
+                                            </label>
+                                        </td>
+                                        <td className="border p-2">
+                                            <button
+                                                onClick={() => handleDeleteUser(user.id)}
+                                                disabled={deleting === user.id}
+                                                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 disabled:opacity-50"
+                                            >
+                                                {deleting === user.id ? 'Deleting…' : 'Delete'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
+
+            {/* Profiles Tab */}
+            {activeTab === 'profiles' && (
+                <>
+                    <h2 className="text-2xl font-bold mb-6">All Profiles</h2>
+                    <div className="space-y-4">
+                        {profiles.map(p => (
+                            <div key={p.id} className="border p-3 rounded hover:bg-gray-50">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <div className="font-bold">{p.displayName ?? p.userName}</div>
+                                        <div className="text-sm text-gray-600">{p.location}</div>
+                                    </div>
+                                    <div className="text-right text-sm">
+                                        <div><strong>Avg:</strong> {averages[p.id] ? averages[p.id].toFixed(2) : '—'}</div>
+                                        <div><strong>Ratings:</strong> {ratings[p.id]?.length ?? 0}</div>
+                                    </div>
+                                </div>
+                                <p className="mt-2">{p.bio}</p>
+                                <div className="mt-2 text-sm">
+                                    <strong>Offers:</strong> {p.skillsOffered?.map((s: any) => s.name).join(', ') || '—'}
+                                </div>
+                                <div className="mt-1 text-sm">
+                                    <strong>Wants:</strong> {p.skillsWanted?.map((s: any) => s.name).join(', ') || '—'}
+                                </div>
+                            </div>
                         ))}
-                    </tbody>
-                </table>
-            </div>
+                    </div>
+                </>
+            )}
 
             {/* Add user modal */}
             {showAddModal && (
