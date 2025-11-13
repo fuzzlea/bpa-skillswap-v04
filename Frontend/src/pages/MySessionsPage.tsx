@@ -114,7 +114,7 @@ export default function MySessionsPage() {
         setFormError(null);
         try {
             const iso = new Date(scheduledAt).toISOString();
-            
+
             if (editingSessionId !== null) {
                 // Update existing session
                 await updateSession(editingSessionId, {
