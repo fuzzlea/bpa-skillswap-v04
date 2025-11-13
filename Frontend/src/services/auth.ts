@@ -70,7 +70,7 @@ export function getCurrentUser(): { id: string; userName: string; roles: string[
     // 2. Simple 'role' property as array (if multiple roles)
     // 3. Microsoft namespace key: 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
     const roles: string[] = [];
-    
+
     // Check for Microsoft namespace role claim first (standard ASP.NET Core Identity JWT format)
     const msRoleClaim = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
     if (msRoleClaim) {
@@ -80,7 +80,7 @@ export function getCurrentUser(): { id: string; userName: string; roles: string[
             roles.push(msRoleClaim);
         }
     }
-    
+
     // Fallback to simple 'role' property if no Microsoft namespace claim
     if (roles.length === 0 && decoded.role) {
         if (Array.isArray(decoded.role)) {

@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminPanel from './pages/AdminPanel';
+import Profiles from './pages/ProfileView';
+import ProfileEditor from './pages/ProfileEditor';
+import SessionsPage from './pages/CreateSession';
+import SessionsList from './pages/SessionList';
+import SessionDetail from './pages/SessionDetail';
+import Ratings from './pages/Ratings';
 import { getToken, logout, isAdmin, getCurrentUser } from './services/auth';
 
 function App() {
-  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin'>(getToken() ? 'home' : 'login');
+  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'profiles' | 'myprofile' | 'sessions' | 'createsession' | 'ratings' | 'sessiondetail'>(getToken() ? 'home' : 'login');
+  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [userAdmin, setUserAdmin] = useState(isAdmin());
 
   useEffect(() => {
@@ -28,8 +35,12 @@ function App() {
         <nav className="space-x-4 flex items-center">
           {!getToken() && <button onClick={() => setRoute('login')} className="text-blue-600">Login</button>}
           {!getToken() && <button onClick={() => setRoute('register')} className="text-green-600">Register</button>}
+          {getToken() && <button onClick={() => setRoute('profiles')} className="text-indigo-600">Profiles</button>}
+          {getToken() && <button onClick={() => setRoute('sessions')} className="text-teal-600">Sessions</button>}
+          {getToken() && <button onClick={() => setRoute('createsession')} className="text-green-600">Create Session</button>}
+          {getToken() && <button onClick={() => setRoute('myprofile')} className="text-gray-600">My Profile</button>}
           {getToken() && userAdmin && <button onClick={() => setRoute('admin')} className="text-purple-600 font-bold">Admin Panel</button>}
-          {getToken() && <button onClick={() => setRoute('home')} className="text-gray-600">Home</button>}
+          {getToken() && <button onClick={() => setRoute('ratings')} className="text-yellow-600">Ratings</button>}
           {getToken() && <button onClick={() => { logout(); setRoute('login'); }} className="text-red-600">Logout</button>}
         </nav>
       </header>
@@ -37,6 +48,13 @@ function App() {
       <main className="max-w-3xl mx-auto">
         {route === 'login' && <Login onSuccess={onSuccess} />}
         {route === 'register' && <Register onSuccess={onSuccess} />}
+        {route === 'profiles' && <Profiles />}
+        {route === 'myprofile' && <ProfileEditor />}
+        {route === 'sessions' && <SessionsList onView={(id: number) => { setSelectedSessionId(id); setRoute('sessiondetail'); }} />}
+        {route === 'createsession' && <SessionsPage />}
+        {route === 'sessiondetail' && selectedSessionId !== null && <SessionDetail sessionId={selectedSessionId} onBack={() => setRoute('sessions')} />}
+        {route === 'ratings' && <Ratings />}
+
         {route === 'home' && (
           <div className="p-6 bg-white rounded shadow">
             <h2 className="text-2xl">Welcome</h2>

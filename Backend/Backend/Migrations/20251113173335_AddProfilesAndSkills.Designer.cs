@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using bpa_skillswap_v04.Data;
 
@@ -10,9 +11,11 @@ using bpa_skillswap_v04.Data;
 namespace Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251113173335_AddProfilesAndSkills")]
+    partial class AddProfilesAndSkills
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -274,109 +277,6 @@ namespace Backend.Migrations
                     b.ToTable("Profiles");
                 });
 
-            modelBuilder.Entity("bpa_skillswap_v04.Models.Rating", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("RaterProfileId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Score")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SessionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("TargetProfileId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RaterProfileId");
-
-                    b.HasIndex("SessionId");
-
-                    b.HasIndex("TargetProfileId");
-
-                    b.ToTable("Ratings");
-                });
-
-            modelBuilder.Entity("bpa_skillswap_v04.Models.Session", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("HostProfileId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsOpen")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("ScheduledAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("SkillId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HostProfileId");
-
-                    b.HasIndex("SkillId");
-
-                    b.ToTable("Sessions");
-                });
-
-            modelBuilder.Entity("bpa_skillswap_v04.Models.SessionRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Message")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("RequesterProfileId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SessionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequesterProfileId");
-
-                    b.HasIndex("SessionId");
-
-                    b.ToTable("SessionRequests");
-                });
-
             modelBuilder.Entity("bpa_skillswap_v04.Models.Skill", b =>
                 {
                     b.Property<int>("Id")
@@ -486,74 +386,6 @@ namespace Backend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("bpa_skillswap_v04.Models.Rating", b =>
-                {
-                    b.HasOne("bpa_skillswap_v04.Models.Profile", "RaterProfile")
-                        .WithMany()
-                        .HasForeignKey("RaterProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("bpa_skillswap_v04.Models.Session", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("bpa_skillswap_v04.Models.Profile", "TargetProfile")
-                        .WithMany()
-                        .HasForeignKey("TargetProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RaterProfile");
-
-                    b.Navigation("Session");
-
-                    b.Navigation("TargetProfile");
-                });
-
-            modelBuilder.Entity("bpa_skillswap_v04.Models.Session", b =>
-                {
-                    b.HasOne("bpa_skillswap_v04.Models.Profile", "HostProfile")
-                        .WithMany()
-                        .HasForeignKey("HostProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("bpa_skillswap_v04.Models.Skill", "Skill")
-                        .WithMany()
-                        .HasForeignKey("SkillId");
-
-                    b.Navigation("HostProfile");
-
-                    b.Navigation("Skill");
-                });
-
-            modelBuilder.Entity("bpa_skillswap_v04.Models.SessionRequest", b =>
-                {
-                    b.HasOne("bpa_skillswap_v04.Models.Profile", "RequesterProfile")
-                        .WithMany()
-                        .HasForeignKey("RequesterProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("bpa_skillswap_v04.Models.Session", "Session")
-                        .WithMany("Requests")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RequesterProfile");
-
-                    b.Navigation("Session");
-                });
-
-            modelBuilder.Entity("bpa_skillswap_v04.Models.Session", b =>
-                {
-                    b.Navigation("Requests");
                 });
 #pragma warning restore 612, 618
         }

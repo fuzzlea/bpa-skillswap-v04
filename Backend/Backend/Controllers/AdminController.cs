@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using bpa_skillswap_v04.Models;
 using bpa_skillswap_v04.Controllers.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace bpa_skillswap_v04.Controllers
 {
@@ -13,11 +14,13 @@ namespace bpa_skillswap_v04.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly bpa_skillswap_v04.Data.ApplicationDbContext _db;
 
-        public AdminController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public AdminController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, bpa_skillswap_v04.Data.ApplicationDbContext db)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _db = db;
         }
 
         [HttpGet("users")]
@@ -92,6 +95,30 @@ namespace bpa_skillswap_v04.Controllers
             }
 
             return Ok(new { user.Id, user.UserName, IsAdmin = req.IsAdmin });
+        }
+
+        [HttpGet("summary")]
+        public async Task<IActionResult> Summary()
+        {
+            // Basic activity metrics
+            var totalUsers = await _userManager.Users.CountAsync();
+            var totalProfiles = await _db.Profiles.CountAsync();
+            var totalSessions = await _db.Sessions.CountAsync();
+            var openSessions = await _db.Sessions.CountAsync(s => s.IsOpen);
+            var pendingRequests = await _db.SessionRequests.CountAsync(r => r.Status == "Pending");
+            var totalRatings = await _db.Ratings.CountAsync();
+            var avgRating = await _db.Ratings.AnyAsync() ? await _db.Ratings.AverageAsync(r => (double)r.Score) : 0.0;
+
+            return Ok(new
+            {
+                totalUsers,
+                totalProfiles,
+                totalSessions,
+                openSessions,
+                pendingRequests,
+                totalRatings,
+                averageRating = avgRating
+            });
         }
     }
 }

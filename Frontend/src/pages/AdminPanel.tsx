@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { User } from '../services/admin';
-import { getAllUsers, addUser, deleteUser, toggleAdminRole } from '../services/admin';
+import { getAllUsers, addUser, deleteUser, toggleAdminRole, getSummary } from '../services/admin';
 
 export default function AdminPanel() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [summary, setSummary] = useState<any>(null);
     const [showAddModal, setShowAddModal] = useState(false);
     const [deleting, setDeleting] = useState<string | null>(null);
 
@@ -16,6 +17,7 @@ export default function AdminPanel() {
 
     useEffect(() => {
         loadUsers();
+        loadSummary();
     }, []);
 
     const loadUsers = async () => {
@@ -28,6 +30,15 @@ export default function AdminPanel() {
             setError(err.message ?? 'Failed to load users');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadSummary = async () => {
+        try {
+            const s = await getSummary();
+            setSummary(s);
+        } catch (err: any) {
+            // ignore for now
         }
     };
 
@@ -79,6 +90,17 @@ export default function AdminPanel() {
 
     return (
         <div className="p-6 bg-white rounded shadow">
+            {summary && (
+                <div className="mb-4 p-3 border rounded bg-gray-50">
+                    <div className="flex gap-4">
+                        <div><strong>Users:</strong> {summary.totalUsers}</div>
+                        <div><strong>Profiles:</strong> {summary.totalProfiles}</div>
+                        <div><strong>Sessions:</strong> {summary.totalSessions} ({summary.openSessions} open)</div>
+                        <div><strong>Pending Requests:</strong> {summary.pendingRequests}</div>
+                        <div><strong>Avg Rating:</strong> {Number(summary.averageRating).toFixed(2)}</div>
+                    </div>
+                </div>
+            )}
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">User Management</h2>
                 <button

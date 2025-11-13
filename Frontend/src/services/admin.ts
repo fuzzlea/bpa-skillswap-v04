@@ -49,3 +49,9 @@ export async function toggleAdminRole(id: string, isAdmin: boolean): Promise<any
     if (!res.ok) throw new Error('Failed to toggle admin role');
     return res.json();
 }
+
+export async function getSummary(): Promise<any> {
+    const res = await authFetch(`${API_BASE}/admin/summary`);
+    if (!res.ok) throw new Error('Failed to load admin summary');
+    return res.json();
+}
