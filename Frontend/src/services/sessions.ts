@@ -77,5 +77,29 @@ export async function deleteSession(sessionId: number) {
         method: 'DELETE'
     });
     if (!res.ok) throw new Error('Failed to delete session');
+    // NoContent response has no body, so don't try to parse JSON
+    return { success: true };
+}
+
+export async function updateSession(sessionId: number, payload: {
+    title?: string;
+    description?: string;
+    skillId?: number | null;
+    scheduledAt?: string; // ISO string
+    durationMinutes?: number;
+    isOpen?: boolean;
+}) {
+    const res = await authFetch(`${API_BASE}/sessions/${sessionId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            Title: payload.title,
+            Description: payload.description,
+            SkillId: payload.skillId,
+            ScheduledAt: payload.scheduledAt,
+            DurationMinutes: payload.durationMinutes,
+            IsOpen: payload.isOpen
+        })
+    });
+    if (!res.ok) throw new Error('Failed to update session');
     return res.json();
 }

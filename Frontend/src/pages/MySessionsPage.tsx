@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { listSessions, createSession, deleteSession } from '../services/sessions';
+import { listSessions, createSession, deleteSession, updateSession } from '../services/sessions';
 import { getSkills, getProfiles } from '../services/profile';
 import { getCurrentUser } from '../services/auth';
 
@@ -10,6 +10,7 @@ export default function MySessionsPage() {
     const [error, setError] = useState<string | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [userProfileId, setUserProfileId] = useState<number | null>(null);
+    const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
 
     // Form state
     const [title, setTitle] = useState('');
@@ -77,6 +78,32 @@ export default function MySessionsPage() {
         }
     }
 
+    function resetForm() {
+        setTitle('');
+        setDescription('');
+        setSkillId(null);
+        setScheduledAt('');
+        setDuration(60);
+        setFormError(null);
+    }
+
+    function startEdit(session: any) {
+        setEditingSessionId(session.id);
+        setTitle(session.title);
+        setDescription(session.description || '');
+        setSkillId(session.skill?.id || null);
+        // Convert ISO string to datetime-local format
+        const date = new Date(session.scheduledAt);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        setScheduledAt(`${year}-${month}-${day}T${hours}:${minutes}`);
+        setDuration(session.durationMinutes);
+        setShowCreateForm(true);
+    }
+
     async function handleCreate(e: React.FormEvent) {
         e.preventDefault();
         if (!scheduledAt) {
@@ -87,21 +114,31 @@ export default function MySessionsPage() {
         setFormError(null);
         try {
             const iso = new Date(scheduledAt).toISOString();
-            await createSession({
-                title,
-                description,
-                skillId,
-                scheduledAt: iso,
-                durationMinutes: duration,
-            } as any);
+            
+            if (editingSessionId !== null) {
+                // Update existing session
+                await updateSession(editingSessionId, {
+                    title,
+                    description,
+                    skillId,
+                    scheduledAt: iso,
+                    durationMinutes: duration,
+                });
+            } else {
+                // Create new session
+                await createSession({
+                    title,
+                    description,
+                    skillId,
+                    scheduledAt: iso,
+                    durationMinutes: duration,
+                } as any);
+            }
 
             // Reset form and reload sessions
-            setTitle('');
-            setDescription('');
-            setSkillId(null);
-            setScheduledAt('');
-            setDuration(60);
+            resetForm();
             setShowCreateForm(false);
+            setEditingSessionId(null);
             await loadSessions();
         } catch (err) {
             setFormError((err as Error).message);
@@ -120,6 +157,12 @@ export default function MySessionsPage() {
         }
     }
 
+    function cancelEdit() {
+        setShowCreateForm(false);
+        setEditingSessionId(null);
+        resetForm();
+    }
+
     if (loading) return <div className="p-6">Loading sessions...</div>;
 
     return (
@@ -131,14 +174,19 @@ export default function MySessionsPage() {
             {/* Create Session Button / Form */}
             {!showCreateForm ? (
                 <button
-                    onClick={() => setShowCreateForm(true)}
+                    onClick={() => {
+                        resetForm();
+                        setShowCreateForm(true);
+                    }}
                     className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                 >
                     Create New Session
                 </button>
             ) : (
                 <div className="border p-4 rounded bg-gray-50">
-                    <h3 className="font-semibold mb-3">Create New Session</h3>
+                    <h3 className="font-semibold mb-3">
+                        {editingSessionId !== null ? 'Edit Session' : 'Create New Session'}
+                    </h3>
                     {formError && <div className="p-2 bg-red-100 text-red-700 rounded mb-3">{formError}</div>}
                     <form onSubmit={handleCreate} className="space-y-3">
                         <input
@@ -189,11 +237,11 @@ export default function MySessionsPage() {
                                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
                                 disabled={formLoading}
                             >
-                                {formLoading ? 'Creating...' : 'Create Session'}
+                                {formLoading ? (editingSessionId ? 'Updating...' : 'Creating...') : (editingSessionId ? 'Update Session' : 'Create Session')}
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setShowCreateForm(false)}
+                                onClick={cancelEdit}
                                 className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
                             >
                                 Cancel
@@ -225,12 +273,20 @@ export default function MySessionsPage() {
                                         Status: {s.isOpen ? '✅ Open' : '❌ Closed'}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => handleDelete(s.id)}
-                                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 ml-2"
-                                >
-                                    Delete
-                                </button>
+                                <div className="flex gap-2 ml-2">
+                                    <button
+                                        onClick={() => startEdit(s)}
+                                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(s.id)}
+                                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}

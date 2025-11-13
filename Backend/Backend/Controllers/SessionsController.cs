@@ -179,6 +179,73 @@ namespace bpa_skillswap_v04.Controllers
             return Ok(new { request.Id, request.SessionId, request.RequesterProfileId, request.Message, request.Status, request.CreatedAt });
         }
 
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateSessionDto dto)
+        {
+            if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+            var session = await _db.Sessions.FindAsync(id);
+            if (session == null) return NotFound();
+
+            var userId = _userManager.GetUserId(User);
+            var hostProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (hostProfile == null || session.HostProfileId != hostProfile.Id)
+            {
+                return Forbid("You can only edit sessions you created.");
+            }
+
+            // Update fields
+            session.Title = dto.Title ?? session.Title;
+            session.Description = dto.Description ?? session.Description;
+            if (dto.SkillId.HasValue)
+                session.SkillId = dto.SkillId;
+            if (dto.ScheduledAt.HasValue)
+                session.ScheduledAt = dto.ScheduledAt.Value;
+            if (dto.DurationMinutes.HasValue)
+                session.DurationMinutes = dto.DurationMinutes.Value;
+            if (dto.IsOpen.HasValue)
+                session.IsOpen = dto.IsOpen.Value;
+
+            await _db.SaveChangesAsync();
+
+            // Return lightweight DTO to avoid cycles
+            return Ok(new
+            {
+                session.Id,
+                session.Title,
+                session.Description,
+                SkillId = session.SkillId,
+                session.ScheduledAt,
+                session.DurationMinutes,
+                session.IsOpen
+            });
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var session = await _db.Sessions.FindAsync(id);
+            if (session == null) return NotFound();
+
+            var userId = _userManager.GetUserId(User);
+            var hostProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (hostProfile == null || session.HostProfileId != hostProfile.Id)
+            {
+                return Forbid("You can only delete sessions you created.");
+            }
+
+            // Delete related session requests first
+            var relatedRequests = await _db.SessionRequests.Where(r => r.SessionId == id).ToListAsync();
+            _db.SessionRequests.RemoveRange(relatedRequests);
+
+            _db.Sessions.Remove(session);
+            await _db.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         // DTOs
         public class CreateSessionDto
         {
@@ -190,6 +257,16 @@ namespace bpa_skillswap_v04.Controllers
             public DateTime? ScheduledAt { get; set; }
             [System.ComponentModel.DataAnnotations.Range(1, 600)]
             public int DurationMinutes { get; set; }
+        }
+
+        public class UpdateSessionDto
+        {
+            public string? Title { get; set; }
+            public string? Description { get; set; }
+            public int? SkillId { get; set; }
+            public DateTime? ScheduledAt { get; set; }
+            public int? DurationMinutes { get; set; }
+            public bool? IsOpen { get; set; }
         }
 
         public class CreateRequestDto
