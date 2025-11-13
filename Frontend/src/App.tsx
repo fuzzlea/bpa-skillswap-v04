@@ -37,7 +37,7 @@ function App() {
     <div className="min-h-screen bg-gray-100 p-6">
       <header className="max-w-3xl mx-auto flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold cursor-pointer" onClick={() => setRoute('home')}>SkillSwap</h1>
-        
+
         {!getToken() && (
           <nav className="space-x-4 flex items-center">
             <button onClick={() => setRoute('login')} className="text-blue-600">Login</button>
@@ -64,7 +64,7 @@ function App() {
             {userAdmin && <p className="mt-2 text-purple-600 font-bold">You have admin access.</p>}
           </div>
         )}
-        
+
         {route === 'admin' && userAdmin && <AdminPanel />}
         {route === 'admin' && !userAdmin && (
           <div className="p-6 bg-red-100 rounded shadow text-red-700">

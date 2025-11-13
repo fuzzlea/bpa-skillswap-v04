@@ -136,17 +136,15 @@ export default function AdminPanel() {
             <div className="flex gap-2 mb-6 border-b">
                 <button
                     onClick={() => setActiveTab('users')}
-                    className={`px-4 py-2 font-semibold ${
-                        activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
-                    }`}
+                    className={`px-4 py-2 font-semibold ${activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                        }`}
                 >
                     User Management
                 </button>
                 <button
                     onClick={() => setActiveTab('profiles')}
-                    className={`px-4 py-2 font-semibold ${
-                        activeTab === 'profiles' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
-                    }`}
+                    className={`px-4 py-2 font-semibold ${activeTab === 'profiles' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                        }`}
                 >
                     All Profiles
                 </button>
