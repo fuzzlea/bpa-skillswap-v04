@@ -46,6 +46,8 @@ namespace bpa_skillswap_v04.Controllers
             var targetWasAccepted = await _db.SessionRequests.AnyAsync(r => r.SessionId == dto.SessionId && r.RequesterProfileId == dto.TargetProfileId && r.Status == "Accepted");
             if (!targetIsHost && !targetWasAccepted) return BadRequest("Target profile did not participate in the session.");
 
+            var targetProfile = await _db.Profiles.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == dto.TargetProfileId);
+
             var rating = new Rating
             {
                 SessionId = dto.SessionId,
@@ -57,6 +59,22 @@ namespace bpa_skillswap_v04.Controllers
 
             _db.Ratings.Add(rating);
             await _db.SaveChangesAsync();
+
+            // Create notification for target profile (the user being rated)
+            var notification = new Notification
+            {
+                UserId = targetProfile!.UserId,
+                Type = "Rating",
+                Title = "You've Been Rated",
+                Content = $"{raterProfile.DisplayName ?? raterProfile.User?.UserName} gave you a {dto.Score}-star rating",
+                RelatedRatingId = rating.Id,
+                RelatedSessionId = session.Id,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            _db.Notifications.Add(notification);
+            await _db.SaveChangesAsync();
+
             // Return lightweight DTO to avoid EF navigation serialization cycles
             return Ok(new { rating.Id, rating.SessionId, rating.RaterProfileId, rating.TargetProfileId, rating.Score, rating.Comment, rating.CreatedAt });
         }

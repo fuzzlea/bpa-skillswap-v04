@@ -101,6 +101,29 @@ namespace bpa_skillswap_v04.Controllers
 
             _db.Sessions.Add(session);
             await _db.SaveChangesAsync();
+
+            // Create notifications for users whose Wants match this skill
+            var usersWantingSkill = await _db.Profiles
+                .Where(p => p.SkillsWanted.Any(s => s.Id == dto.SkillId))
+                .Include(p => p.User)
+                .ToListAsync();
+
+            foreach (var targetProfile in usersWantingSkill)
+            {
+                var notification = new Notification
+                {
+                    UserId = targetProfile.UserId,
+                    Type = "SessionCreated",
+                    Title = "New Session Available",
+                    Content = $"{profile.DisplayName ?? profile.User?.UserName} created a session for {(await _db.Skills.FindAsync(dto.SkillId))?.Name}",
+                    RelatedSessionId = session.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _db.Notifications.Add(notification);
+            }
+            await _db.SaveChangesAsync();
+
             // Return a lightweight DTO instead of the EF tracked entity to avoid JSON cycles
             var resultDto = new
             {
@@ -122,7 +145,7 @@ namespace bpa_skillswap_v04.Controllers
         [HttpPost("{id}/requests")]
         public async Task<IActionResult> RequestJoin(int id, [FromBody] CreateRequestDto dto)
         {
-            var session = await _db.Sessions.FindAsync(id);
+            var session = await _db.Sessions.Include(s => s.HostProfile).FirstOrDefaultAsync(s => s.Id == id);
             if (session == null) return NotFound();
             if (!session.IsOpen) return BadRequest("Session is not open for requests.");
 
@@ -141,6 +164,21 @@ namespace bpa_skillswap_v04.Controllers
 
             _db.SessionRequests.Add(request);
             await _db.SaveChangesAsync();
+
+            // Create notification for session host
+            var hostNotification = new Notification
+            {
+                UserId = session.HostProfile!.UserId,
+                Type = "JoinRequest",
+                Title = "New Join Request",
+                Content = $"{profile.DisplayName ?? profile.User?.UserName} requested to join your session '{session.Title}'",
+                RelatedSessionId = session.Id,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            };
+            _db.Notifications.Add(hostNotification);
+            await _db.SaveChangesAsync();
+
             // Return a lightweight DTO to avoid serialization of full navigation graph
             return Ok(new { request.Id, request.SessionId, request.RequesterProfileId, request.Message, request.Status, request.CreatedAt });
         }

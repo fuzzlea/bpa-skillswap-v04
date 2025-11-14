@@ -16,6 +16,7 @@ namespace bpa_skillswap_v04.Data
         public DbSet<Models.Session> Sessions { get; set; }
         public DbSet<Models.SessionRequest> SessionRequests { get; set; }
         public DbSet<Models.Rating> Ratings { get; set; }
+        public DbSet<Models.Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -9,6 +9,7 @@ import SessionsList from './pages/SessionList';
 import SessionDetail from './pages/SessionDetail';
 import Ratings from './pages/Ratings';
 import HamburgerMenu from './components/HamburgerMenu';
+import NotificationCenter from './components/NotificationCenter';
 import { getToken, logout, isAdmin, getCurrentUser } from './services/auth';
 
 function App() {
@@ -51,7 +52,12 @@ function App() {
           </nav>
         )}
 
-        {getToken() && <HamburgerMenu onNavigate={handleNavigate} userAdmin={userAdmin} />}
+        {getToken() && (
+          <div className="flex items-center gap-4">
+            <NotificationCenter isLoggedIn={!!getToken()} />
+            <HamburgerMenu onNavigate={handleNavigate} userAdmin={userAdmin} />
+          </div>
+        )}
       </header>
 
       <main className="max-w-3xl mx-auto">
