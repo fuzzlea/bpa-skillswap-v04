@@ -44,18 +44,40 @@ export async function getMyProfile(): Promise<Profile> {
 }
 
 export async function saveProfile(payload: Partial<Profile>): Promise<Profile> {
+    // Transform skill objects to skill IDs for the backend
+    const body = {
+        displayName: payload.displayName,
+        bio: payload.bio,
+        location: payload.location,
+        contact: payload.contact,
+        availability: payload.availability,
+        skillsOfferedIds: payload.skillsOffered?.map(s => s.id) || [],
+        skillsWantedIds: payload.skillsWanted?.map(s => s.id) || []
+    };
+
     const res = await authFetch(`${API_BASE}/profiles`, {
         method: 'POST',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error('Failed to save profile');
     return res.json();
 }
 
 export async function updateProfile(id: number, payload: Partial<Profile>): Promise<Profile> {
+    // Transform skill objects to skill IDs for the backend
+    const body = {
+        displayName: payload.displayName,
+        bio: payload.bio,
+        location: payload.location,
+        contact: payload.contact,
+        availability: payload.availability,
+        skillsOfferedIds: payload.skillsOffered?.map(s => s.id) || [],
+        skillsWantedIds: payload.skillsWanted?.map(s => s.id) || []
+    };
+
     const res = await authFetch(`${API_BASE}/profiles/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error('Failed to update profile');
     return res.json();

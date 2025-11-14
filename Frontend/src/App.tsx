@@ -23,9 +23,15 @@ function App() {
     console.log('Current user:', currentUser); // Debug log
   }, [route]);
 
-  const onSuccess = () => {
+  const onLoginSuccess = () => {
     setRoute('home');
     // Force re-check of admin status after login
+    setTimeout(() => setUserAdmin(isAdmin()), 100);
+  };
+
+  const onRegisterSuccess = () => {
+    // New users should create their profile immediately
+    setRoute('myprofile');
     setTimeout(() => setUserAdmin(isAdmin()), 100);
   };
 
@@ -49,8 +55,8 @@ function App() {
       </header>
 
       <main className="max-w-3xl mx-auto">
-        {route === 'login' && <Login onSuccess={onSuccess} />}
-        {route === 'register' && <Register onSuccess={onSuccess} />}
+        {route === 'login' && <Login onSuccess={onLoginSuccess} />}
+        {route === 'register' && <Register onSuccess={onRegisterSuccess} />}
         {route === 'myprofile' && <ProfileEditor />}
         {route === 'sessions' && <SessionsList onView={(id: number) => { setSelectedSessionId(id); setRoute('sessiondetail'); }} />}
         {route === 'mysessions' && <MySessionsPage />}

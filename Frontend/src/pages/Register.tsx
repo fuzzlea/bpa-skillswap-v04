@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { register } from '../services/auth';
+import { register, login } from '../services/auth';
 
 export default function Register({ onSuccess }: { onSuccess: () => void }) {
     const [userName, setUserName] = useState('');
@@ -28,11 +28,17 @@ export default function Register({ onSuccess }: { onSuccess: () => void }) {
         }
         setLoading(true);
         try {
+            // Register the user
             const res = await register({ userName, email, password, displayName });
             if (!res.ok) {
                 const text = await res.text();
                 throw new Error(text || 'Registration failed');
             }
+
+            // Automatically log in after successful registration
+            await login({ userName, password });
+
+            // Call onSuccess which will redirect to profile creation
             onSuccess();
         } catch (err: any) {
             setError(err.message ?? 'Registration failed');
