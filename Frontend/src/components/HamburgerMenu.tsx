@@ -1,16 +1,23 @@
 import { useState } from 'react';
-import { getToken, logout } from '../services/auth';
+import { getToken, logout, getCurrentUser } from '../services/auth';
 
-interface HamburgerMenuProps {
-    onNavigate: (route: string) => void;
-    userAdmin: boolean;
-}
-
-export default function HamburgerMenu({ onNavigate, userAdmin }: HamburgerMenuProps) {
+export default function HamburgerMenu({ onNavigate, userAdmin }: { onNavigate: (route: string, state?: any) => void; userAdmin: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
 
     const handleNavClick = (route: string) => {
         onNavigate(route);
+        setIsOpen(false);
+    };
+
+    const handleMyProfileClick = () => {
+        const currentUser = getCurrentUser();
+        if (currentUser?.profileId) {
+            // View own profile first (read-only view)
+            onNavigate('profileview', { profileId: currentUser.profileId });
+        } else {
+            // No profile yet, go to create/edit profile
+            onNavigate('myprofile');
+        }
         setIsOpen(false);
     };
 
@@ -41,7 +48,7 @@ export default function HamburgerMenu({ onNavigate, userAdmin }: HamburgerMenuPr
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-10">
                     <button
-                        onClick={() => handleNavClick('myprofile')}
+                        onClick={handleMyProfileClick}
                         className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
                     >
                         My Profile

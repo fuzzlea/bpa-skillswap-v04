@@ -57,7 +57,7 @@ export function decodeToken(token: string): DecodedToken | null {
     }
 }
 
-export function getCurrentUser(): { id: string; userName: string; roles: string[] } | null {
+export function getCurrentUser(): { id: string; userName: string; profileId?: number; roles: string[] } | null {
     const token = getToken();
     if (!token) return null;
 
@@ -90,11 +90,18 @@ export function getCurrentUser(): { id: string; userName: string; roles: string[
         }
     }
 
-    return {
+    const result = {
         id: decoded.nameid || decoded.sub || '',
         userName: decoded.unique_name || '',
         roles
     };
+
+    // Add profileId if it exists in the token
+    if (decoded.profileId) {
+        (result as any).profileId = parseInt(decoded.profileId, 10);
+    }
+
+    return result;
 }
 
 export function isAdmin(): boolean {

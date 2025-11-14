@@ -79,6 +79,34 @@ namespace bpa_skillswap_v04.Controllers
             return Ok(s);
         }
 
+        [HttpGet("profile/{profileId}/active")]
+        public async Task<IActionResult> GetActiveSessions(int profileId)
+        {
+            var sessions = await _db.Sessions
+                .Where(s => s.HostProfileId == profileId && s.IsOpen)
+                .Include(s => s.Skill)
+                .Include(s => s.HostProfile)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.Title,
+                    s.Description,
+                    Skill = s.Skill != null ? new { s.Skill.Id, s.Skill.Name } : null,
+                    s.HostProfileId,
+                    HostDisplayName = s.HostProfile != null
+                        ? (s.HostProfile.DisplayName != null
+                            ? s.HostProfile.DisplayName
+                            : (s.HostProfile.User != null ? s.HostProfile.User.UserName : null))
+                        : null,
+                    s.ScheduledAt,
+                    s.DurationMinutes,
+                    s.IsOpen
+                })
+                .ToListAsync();
+
+            return Ok(sessions);
+        }
+
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSessionDto dto)

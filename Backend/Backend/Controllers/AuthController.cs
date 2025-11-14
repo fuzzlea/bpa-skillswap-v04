@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using bpa_skillswap_v04.Models;
 using bpa_skillswap_v04.Controllers.DTOs;
+using bpa_skillswap_v04.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace bpa_skillswap_v04.Controllers
 {
@@ -16,11 +18,13 @@ namespace bpa_skillswap_v04.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _config;
+        private readonly ApplicationDbContext _db;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config)
+        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config, ApplicationDbContext db)
         {
             _userManager = userManager;
             _config = config;
+            _db = db;
         }
 
         [HttpPost("register")]
@@ -60,12 +64,21 @@ namespace bpa_skillswap_v04.Controllers
             // Get user roles
             var roles = await _userManager.GetRolesAsync(user);
 
+            // Get user's profile ID if exists
+            var profile = await _db.Profiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
+
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName ?? ""),
                 new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
+
+            // Add profile ID if user has a profile
+            if (profile != null)
+            {
+                claims.Add(new Claim("profileId", profile.Id.ToString()));
+            }
 
             // Add role claims
             foreach (var role in roles)

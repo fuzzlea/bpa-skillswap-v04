@@ -14,7 +14,7 @@ interface Request {
     createdAt: string;
 }
 
-export default function ManageRequests() {
+export default function ManageRequests({ onProfile }: { onProfile?: (profileId: number) => void }) {
     const [requests, setRequests] = useState<Request[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -91,9 +91,12 @@ export default function ManageRequests() {
                                     >
                                         <div className="flex justify-between items-start gap-4">
                                             <div className="flex-1">
-                                                <div className="font-semibold text-gray-900">
+                                                <button
+                                                    className="font-semibold text-blue-600 hover:underline text-left"
+                                                    onClick={() => onProfile?.(req.requesterProfileId)}
+                                                >
                                                     {req.requesterDisplayName}
-                                                </div>
+                                                </button>
                                                 <div className="text-sm text-blue-600 font-medium mt-1">
                                                     Requested to join: <span className="text-gray-900">{req.sessionTitle}</span>
                                                 </div>
@@ -144,9 +147,12 @@ export default function ManageRequests() {
                                     >
                                         <div className="flex justify-between items-start">
                                             <div className="flex-1">
-                                                <div className="font-medium text-gray-900">
+                                                <button
+                                                    className="font-medium text-blue-600 hover:underline text-left"
+                                                    onClick={() => onProfile?.(req.requesterProfileId)}
+                                                >
                                                     {req.requesterDisplayName}
-                                                </div>
+                                                </button>
                                                 <div className="text-sm text-gray-600 mt-1">
                                                     {req.sessionTitle}
                                                 </div>
@@ -157,8 +163,8 @@ export default function ManageRequests() {
                                             <div className="shrink-0">
                                                 <span
                                                     className={`px-3 py-1 rounded-full text-xs font-semibold ${req.status === 'Accepted'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-red-100 text-red-800'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-red-100 text-red-800'
                                                         }`}
                                                 >
                                                     {req.status}
@@ -205,8 +211,8 @@ export default function ManageRequests() {
                             </button>
                             <button
                                 className={`px-4 py-2 text-white rounded font-medium ${respondingType === 'accept'
-                                        ? 'bg-green-600 hover:bg-green-700'
-                                        : 'bg-red-600 hover:bg-red-700'
+                                    ? 'bg-green-600 hover:bg-green-700'
+                                    : 'bg-red-600 hover:bg-red-700'
                                     }`}
                                 onClick={submitResponse}
                             >

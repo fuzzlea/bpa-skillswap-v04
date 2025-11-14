@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { listSessions, requestJoin } from '../services/sessions';
 
-export default function SessionsList({ onView }: { onView?: (id: number) => void }) {
+export default function SessionsList({
+    onView,
+    onProfile
+}: {
+    onView?: (id: number) => void;
+    onProfile?: (profileId: number) => void;
+}) {
     const [sessions, setSessions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -38,7 +44,15 @@ export default function SessionsList({ onView }: { onView?: (id: number) => void
                         <div className="flex justify-between items-center">
                             <div>
                                 <div className="font-semibold">{s.title}</div>
-                                <div className="text-sm text-gray-600">Host: {s.hostDisplayName || '—'}</div>
+                                <div className="text-sm text-gray-600">
+                                    Host:{' '}
+                                    <button
+                                        className="text-blue-600 hover:underline"
+                                        onClick={() => onProfile?.(s.hostProfileId)}
+                                    >
+                                        {s.hostDisplayName || '—'}
+                                    </button>
+                                </div>
                                 <div className="text-sm text-gray-600">{s.scheduledAt} • {s.durationMinutes} min</div>
                             </div>
                             <div className="flex gap-2">

@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react';
 import { getSession, respondToRequest } from '../services/sessions';
 import { getCurrentUser } from '../services/auth';
 
-export default function SessionDetail({ sessionId, onBack }: { sessionId: number; onBack: () => void }) {
+export default function SessionDetail({
+    sessionId,
+    onBack,
+    onProfile
+}: {
+    sessionId: number;
+    onBack: () => void;
+    onProfile?: (profileId: number) => void;
+}) {
     const [session, setSession] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -54,6 +62,15 @@ export default function SessionDetail({ sessionId, onBack }: { sessionId: number
         <div className="p-6 bg-white rounded shadow">
             <button className="mb-4 text-sm text-blue-600" onClick={onBack}>← Back to sessions</button>
             <h2 className="text-xl font-bold">{session.title}</h2>
+            <p className="text-sm text-gray-600">
+                Hosted by{' '}
+                <button
+                    className="text-blue-600 hover:underline"
+                    onClick={() => onProfile?.(session.hostProfileId)}
+                >
+                    {session.hostDisplayName || 'Unknown'}
+                </button>
+            </p>
             <p className="text-sm text-gray-600">{session.scheduledAt} • {session.durationMinutes} min</p>
             <p className="mt-4">{session.description}</p>
 
@@ -64,7 +81,12 @@ export default function SessionDetail({ sessionId, onBack }: { sessionId: number
                     {session.requests?.map((r: any) => (
                         <div key={r.id} className="border p-3 rounded flex justify-between items-start gap-4">
                             <div className="flex-1">
-                                <div className="font-medium">{r.requesterDisplayName ?? 'Unknown'}</div>
+                                <button
+                                    className="font-medium text-blue-600 hover:underline text-left"
+                                    onClick={() => onProfile?.(r.requesterProfileId)}
+                                >
+                                    {r.requesterDisplayName ?? 'Unknown'}
+                                </button>
                                 <div className="text-sm text-gray-600">{r.message}</div>
                                 <div className="text-xs text-gray-500">{r.status} • {new Date(r.createdAt).toLocaleString()}</div>
                             </div>
@@ -123,8 +145,8 @@ export default function SessionDetail({ sessionId, onBack }: { sessionId: number
                             </button>
                             <button
                                 className={`px-4 py-2 text-white rounded ${respondingType === 'accept'
-                                        ? 'bg-green-600 hover:bg-green-700'
-                                        : 'bg-red-600 hover:bg-red-700'
+                                    ? 'bg-green-600 hover:bg-green-700'
+                                    : 'bg-red-600 hover:bg-red-700'
                                     }`}
                                 onClick={submitResponse}
                             >

@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminPanel from './pages/AdminPanel';
 import ProfileEditor from './pages/ProfileEditor';
+import ProfileView from './pages/ProfileView';
 import CreateSession from './pages/CreateSession';
 import MySessionsPage from './pages/MySessionsPage';
 import SessionsList from './pages/SessionList';
@@ -14,8 +15,9 @@ import NotificationCenter from './components/NotificationCenter';
 import { getToken, logout, isAdmin, getCurrentUser } from './services/auth';
 
 function App() {
-  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'myprofile' | 'sessions' | 'mysessions' | 'managereqs' | 'ratings' | 'sessiondetail'>(getToken() ? 'home' : 'login');
+  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'myprofile' | 'sessions' | 'mysessions' | 'managereqs' | 'ratings' | 'sessiondetail' | 'profileview'>(getToken() ? 'home' : 'login');
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [userAdmin, setUserAdmin] = useState(isAdmin());
 
   useEffect(() => {
@@ -37,7 +39,13 @@ function App() {
     setTimeout(() => setUserAdmin(isAdmin()), 100);
   };
 
-  const handleNavigate = (newRoute: string) => {
+  const handleNavigate = (newRoute: string, state?: any) => {
+    if (newRoute === 'profileview' && state?.profileId) {
+      setSelectedProfileId(state.profileId);
+    }
+    if (newRoute === 'sessiondetail' && state?.sessionId) {
+      setSelectedSessionId(state.sessionId);
+    }
     setRoute(newRoute as any);
   };
 
@@ -65,10 +73,30 @@ function App() {
         {route === 'login' && <Login onSuccess={onLoginSuccess} />}
         {route === 'register' && <Register onSuccess={onRegisterSuccess} />}
         {route === 'myprofile' && <ProfileEditor />}
-        {route === 'sessions' && <SessionsList onView={(id: number) => { setSelectedSessionId(id); setRoute('sessiondetail'); }} />}
+        {route === 'profileview' && selectedProfileId !== null && (
+          <ProfileView
+            profileId={selectedProfileId}
+            onNavigate={handleNavigate}
+            onEditProfile={() => setRoute('myprofile')}
+          />
+        )}
+        {route === 'sessions' && (
+          <SessionsList
+            onView={(id: number) => { setSelectedSessionId(id); setRoute('sessiondetail'); }}
+            onProfile={(profileId: number) => handleNavigate('profileview', { profileId })}
+          />
+        )}
         {route === 'mysessions' && <MySessionsPage />}
-        {route === 'managereqs' && <ManageRequests />}
-        {route === 'sessiondetail' && selectedSessionId !== null && <SessionDetail sessionId={selectedSessionId} onBack={() => setRoute('sessions')} />}
+        {route === 'managereqs' && (
+          <ManageRequests onProfile={(profileId: number) => handleNavigate('profileview', { profileId })} />
+        )}
+        {route === 'sessiondetail' && selectedSessionId !== null && (
+          <SessionDetail
+            sessionId={selectedSessionId}
+            onBack={() => setRoute('sessions')}
+            onProfile={(profileId: number) => handleNavigate('profileview', { profileId })}
+          />
+        )}
         {route === 'ratings' && <Ratings />}
 
         {route === 'home' && (
