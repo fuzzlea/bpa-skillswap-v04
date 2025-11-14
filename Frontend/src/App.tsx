@@ -10,6 +10,7 @@ import SessionsList from './pages/SessionList';
 import SessionDetail from './pages/SessionDetail';
 import ManageRequests from './pages/ManageRequests';
 import Ratings from './pages/Ratings';
+import Dashboard from './pages/Dashboard';
 import HamburgerMenu from './components/HamburgerMenu';
 import NotificationCenter from './components/NotificationCenter';
 import { getToken, logout, isAdmin, getCurrentUser } from './services/auth';
@@ -100,11 +101,14 @@ function App() {
         {route === 'ratings' && <Ratings />}
 
         {route === 'home' && (
-          <div className="p-6 bg-white rounded shadow">
-            <h2 className="text-2xl">Welcome to SkillSwap</h2>
-            <p className="mt-4">Share your skills and learn from others. Use the menu to get started.</p>
-            {userAdmin && <p className="mt-2 text-purple-600 font-bold">You have admin access.</p>}
-          </div>
+          <Dashboard
+            onNavigate={handleNavigate}
+            onViewSession={(sessionId: number) => {
+              setSelectedSessionId(sessionId);
+              setRoute('sessiondetail');
+            }}
+            onViewProfile={(profileId: number) => handleNavigate('profileview', { profileId })}
+          />
         )}
 
         {route === 'admin' && userAdmin && <AdminPanel />}
