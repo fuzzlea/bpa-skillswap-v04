@@ -30,7 +30,7 @@ export default function SessionDetail({ sessionId, onBack }: { sessionId: number
 
     async function submitResponse() {
         if (respondingRequestId === null || respondingType === null) return;
-        
+
         try {
             const accept = respondingType === 'accept';
             await respondToRequest(respondingRequestId, accept, responseMessage || undefined);
@@ -71,14 +71,14 @@ export default function SessionDetail({ sessionId, onBack }: { sessionId: number
                             <div className="flex gap-2 shrink-0">
                                 {isHost && r.status === 'Pending' && (
                                     <>
-                                        <button 
-                                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700" 
+                                        <button
+                                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
                                             onClick={() => handleRespond(r.id, true)}
                                         >
                                             Accept
                                         </button>
-                                        <button 
-                                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700" 
+                                        <button
+                                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
                                             onClick={() => handleRespond(r.id, false)}
                                         >
                                             Reject
@@ -99,8 +99,8 @@ export default function SessionDetail({ sessionId, onBack }: { sessionId: number
                             {respondingType === 'accept' ? 'Accept Request' : 'Reject Request'}
                         </h3>
                         <p className="text-sm text-gray-600 mb-4">
-                            {respondingType === 'accept' 
-                                ? 'Add an optional message to the requester' 
+                            {respondingType === 'accept'
+                                ? 'Add an optional message to the requester'
                                 : 'Add an optional message explaining the rejection'}
                         </p>
                         <textarea
@@ -122,11 +122,10 @@ export default function SessionDetail({ sessionId, onBack }: { sessionId: number
                                 Cancel
                             </button>
                             <button
-                                className={`px-4 py-2 text-white rounded ${
-                                    respondingType === 'accept' 
-                                        ? 'bg-green-600 hover:bg-green-700' 
+                                className={`px-4 py-2 text-white rounded ${respondingType === 'accept'
+                                        ? 'bg-green-600 hover:bg-green-700'
                                         : 'bg-red-600 hover:bg-red-700'
-                                }`}
+                                    }`}
                                 onClick={submitResponse}
                             >
                                 {respondingType === 'accept' ? 'Accept' : 'Reject'}

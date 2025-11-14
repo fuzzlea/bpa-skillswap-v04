@@ -221,10 +221,10 @@ namespace bpa_skillswap_v04.Controllers
             {
                 var notificationType = dto.Accept ? "RequestAccepted" : "RequestRejected";
                 var notificationTitle = dto.Accept ? "Request Accepted" : "Request Denied";
-                var messageContent = dto.Accept 
-                    ? $"{hostProfile.DisplayName ?? hostProfile.User?.UserName} accepted your request to join '{request.Session.Title}'" 
+                var messageContent = dto.Accept
+                    ? $"{hostProfile.DisplayName ?? hostProfile.User?.UserName} accepted your request to join '{request.Session.Title}'"
                     : $"{hostProfile.DisplayName ?? hostProfile.User?.UserName} denied your request to join '{request.Session.Title}'";
-                
+
                 if (!string.IsNullOrWhiteSpace(dto.Message))
                 {
                     messageContent += $": {dto.Message}";
@@ -269,7 +269,7 @@ namespace bpa_skillswap_v04.Controllers
                     r.SessionId,
                     SessionTitle = r.Session!.Title,
                     r.RequesterProfileId,
-                    RequesterDisplayName = r.RequesterProfile != null 
+                    RequesterDisplayName = r.RequesterProfile != null
                         ? (r.RequesterProfile.DisplayName ?? r.RequesterProfile.User!.UserName)
                         : "Unknown",
                     r.Message,
