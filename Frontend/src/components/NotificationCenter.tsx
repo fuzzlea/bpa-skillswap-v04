@@ -4,7 +4,7 @@ import { getNotifications, getUnreadCount, markAsRead, deleteNotification } from
 
 interface Notification {
     id: number;
-    type: 'SessionCreated' | 'JoinRequest' | 'Rating';
+    type: 'SessionCreated' | 'JoinRequest' | 'Rating' | 'RequestAccepted' | 'RequestRejected';
     title: string;
     content: string;
     relatedSessionId?: number;
@@ -90,6 +90,10 @@ export default function NotificationCenter({ isLoggedIn }: NotificationCenterPro
                 return <UserPlus className="w-4 h-4 text-purple-600" />;
             case 'Rating':
                 return <Star className="w-4 h-4 text-yellow-600" />;
+            case 'RequestAccepted':
+                return <Check className="w-4 h-4 text-green-600" />;
+            case 'RequestRejected':
+                return <X className="w-4 h-4 text-red-600" />;
             default:
                 return <Bell className="w-4 h-4 text-gray-600" />;
         }

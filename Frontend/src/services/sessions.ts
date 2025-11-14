@@ -56,10 +56,10 @@ export async function requestJoin(sessionId: number, message?: string) {
     return res.json();
 }
 
-export async function respondToRequest(requestId: number, accept: boolean) {
+export async function respondToRequest(requestId: number, accept: boolean, message?: string) {
     const res = await authFetch(`${API_BASE}/sessions/requests/${requestId}/respond`, {
         method: 'POST',
-        body: JSON.stringify({ Accept: accept })
+        body: JSON.stringify({ Accept: accept, Message: message || null })
     });
     if (!res.ok) throw new Error('Failed to respond to request');
     return res.json();

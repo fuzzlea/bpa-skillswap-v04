@@ -189,13 +189,15 @@ namespace bpa_skillswap_v04.Controllers
         {
             var request = await _db.SessionRequests
                 .Include(r => r.Session)
+                .Include(r => r.RequesterProfile)
+                .ThenInclude(p => p!.User)
                 .FirstOrDefaultAsync(r => r.Id == requestId);
 
             if (request == null) return NotFound();
 
             var userId = _userManager.GetUserId(User);
             // Ensure current user is host of the session
-            var hostProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            var hostProfile = await _db.Profiles.Include(p => p.User).FirstOrDefaultAsync(p => p.UserId == userId);
             if (hostProfile == null || request.Session == null || request.Session.HostProfileId != hostProfile.Id)
             {
                 return Forbid();
@@ -213,8 +215,70 @@ namespace bpa_skillswap_v04.Controllers
             }
 
             await _db.SaveChangesAsync();
+
+            // Create notification for requester about the response
+            if (request.RequesterProfile?.User != null)
+            {
+                var notificationType = dto.Accept ? "RequestAccepted" : "RequestRejected";
+                var notificationTitle = dto.Accept ? "Request Accepted" : "Request Denied";
+                var messageContent = dto.Accept 
+                    ? $"{hostProfile.DisplayName ?? hostProfile.User?.UserName} accepted your request to join '{request.Session.Title}'" 
+                    : $"{hostProfile.DisplayName ?? hostProfile.User?.UserName} denied your request to join '{request.Session.Title}'";
+                
+                if (!string.IsNullOrWhiteSpace(dto.Message))
+                {
+                    messageContent += $": {dto.Message}";
+                }
+
+                var notification = new Notification
+                {
+                    UserId = request.RequesterProfile.UserId,
+                    Type = notificationType,
+                    Title = notificationTitle,
+                    Content = messageContent,
+                    RelatedSessionId = request.SessionId,
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _db.Notifications.Add(notification);
+                await _db.SaveChangesAsync();
+            }
+
             // Return lightweight DTO to avoid serializing navigation properties (which can cause cycles)
             return Ok(new { request.Id, request.SessionId, request.RequesterProfileId, request.Message, request.Status, request.CreatedAt });
+        }
+
+        // GET: api/sessions/requests/pending
+        [Authorize]
+        [HttpGet("requests/pending")]
+        public async Task<IActionResult> GetPendingRequests()
+        {
+            var userId = _userManager.GetUserId(User);
+            var hostProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (hostProfile == null) return BadRequest("User must have a profile");
+
+            // Get all requests for sessions hosted by current user
+            var requests = await _db.SessionRequests
+                .Include(r => r.Session)
+                .Include(r => r.RequesterProfile)
+                .Where(r => r.Session!.HostProfileId == hostProfile.Id)
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.SessionId,
+                    SessionTitle = r.Session!.Title,
+                    r.RequesterProfileId,
+                    RequesterDisplayName = r.RequesterProfile != null 
+                        ? (r.RequesterProfile.DisplayName ?? r.RequesterProfile.User!.UserName)
+                        : "Unknown",
+                    r.Message,
+                    r.Status,
+                    r.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(requests);
         }
 
         [Authorize]
@@ -315,6 +379,7 @@ namespace bpa_skillswap_v04.Controllers
         public class RespondDto
         {
             public bool Accept { get; set; }
+            public string? Message { get; set; } // Optional message with acceptance/rejection
         }
     }
 }

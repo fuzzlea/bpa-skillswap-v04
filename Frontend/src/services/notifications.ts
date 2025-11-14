@@ -2,7 +2,7 @@ import { authFetch } from './auth';
 
 interface Notification {
     id: number;
-    type: 'SessionCreated' | 'JoinRequest' | 'Rating';
+    type: 'SessionCreated' | 'JoinRequest' | 'Rating' | 'RequestAccepted' | 'RequestRejected';
     title: string;
     content: string;
     relatedSessionId?: number;

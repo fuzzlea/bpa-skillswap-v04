@@ -7,13 +7,14 @@ import CreateSession from './pages/CreateSession';
 import MySessionsPage from './pages/MySessionsPage';
 import SessionsList from './pages/SessionList';
 import SessionDetail from './pages/SessionDetail';
+import ManageRequests from './pages/ManageRequests';
 import Ratings from './pages/Ratings';
 import HamburgerMenu from './components/HamburgerMenu';
 import NotificationCenter from './components/NotificationCenter';
 import { getToken, logout, isAdmin, getCurrentUser } from './services/auth';
 
 function App() {
-  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'myprofile' | 'sessions' | 'mysessions' | 'ratings' | 'sessiondetail'>(getToken() ? 'home' : 'login');
+  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'myprofile' | 'sessions' | 'mysessions' | 'managereqs' | 'ratings' | 'sessiondetail'>(getToken() ? 'home' : 'login');
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [userAdmin, setUserAdmin] = useState(isAdmin());
 
@@ -66,6 +67,7 @@ function App() {
         {route === 'myprofile' && <ProfileEditor />}
         {route === 'sessions' && <SessionsList onView={(id: number) => { setSelectedSessionId(id); setRoute('sessiondetail'); }} />}
         {route === 'mysessions' && <MySessionsPage />}
+        {route === 'managereqs' && <ManageRequests />}
         {route === 'sessiondetail' && selectedSessionId !== null && <SessionDetail sessionId={selectedSessionId} onBack={() => setRoute('sessions')} />}
         {route === 'ratings' && <Ratings />}
 
