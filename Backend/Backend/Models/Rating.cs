@@ -6,7 +6,7 @@ namespace bpa_skillswap_v04.Models
     {
         public int Id { get; set; }
 
-        public int SessionId { get; set; }
+        public int? SessionId { get; set; }
         public Session? Session { get; set; }
 
         public int RaterProfileId { get; set; }

@@ -108,6 +108,42 @@ namespace bpa_skillswap_v04.Controllers
         }
 
         [Authorize]
+        [HttpGet("my-participations")]
+        public async Task<IActionResult> GetMyParticipations()
+        {
+            var userId = _userManager.GetUserId(User);
+            var userProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (userProfile == null) return BadRequest("User has no profile");
+
+            var participations = await _db.SessionRequests
+                .Where(r => r.RequesterProfileId == userProfile.Id && (r.Status == "Accepted" || r.Status == "Pending"))
+                .Include(r => r.Session)
+                .ThenInclude(s => s.Skill)
+                .Include(r => r.Session)
+                .ThenInclude(s => s.HostProfile)
+                .Select(r => new
+                {
+                    RequestId = r.Id,
+                    SessionId = r.Session.Id,
+                    r.Session.Title,
+                    r.Session.Description,
+                    r.Session.HostProfileId,
+                    HostDisplayName = r.Session.HostProfile != null
+                        ? (r.Session.HostProfile.DisplayName != null
+                            ? r.Session.HostProfile.DisplayName
+                            : (r.Session.HostProfile.User != null ? r.Session.HostProfile.User.UserName : null))
+                        : null,
+                    Skill = r.Session.Skill != null ? new { r.Session.Skill.Id, r.Session.Skill.Name } : null,
+                    r.Session.ScheduledAt,
+                    r.Session.DurationMinutes,
+                    r.Status
+                })
+                .ToListAsync();
+
+            return Ok(participations);
+        }
+
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSessionDto dto)
         {

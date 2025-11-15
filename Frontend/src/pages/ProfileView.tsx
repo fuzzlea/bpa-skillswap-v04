@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getProfile } from '../services/profile';
 import { getAverageRating } from '../services/ratings';
-import { getCurrentUser } from '../services/auth';
-import { Star } from 'lucide-react';
+import { getCurrentUser, authFetch } from '../services/auth';
+import { Star, X } from 'lucide-react';
 
 interface ProfileData {
     id: number;
@@ -38,14 +38,18 @@ export default function ProfileView({ profileId, onNavigate, onEditProfile }: Pr
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isOwnProfile, setIsOwnProfile] = useState(false);
+    const [ratingModal, setRatingModal] = useState(false);
+    const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState('');
+    const [submittingRating, setSubmittingRating] = useState(false);
+
+    const currentUser = getCurrentUser();
 
     useEffect(() => {
         async function load() {
             try {
                 setLoading(true);
                 const currentUser = getCurrentUser();
-
-                // Get profile
                 const profileData = await getProfile(profileId);
                 setProfile(profileData);
 
@@ -110,6 +114,53 @@ export default function ProfileView({ profileId, onNavigate, onEditProfile }: Pr
         ));
     };
 
+    const renderRatingInput = (count: number) => {
+        return Array(5).fill(0).map((_, i) => (
+            <button
+                key={i}
+                type="button"
+                onClick={() => setRating(i + 1)}
+                className="focus:outline-none transition"
+            >
+                <Star
+                    size={28}
+                    className={i < count ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                />
+            </button>
+        ));
+    };
+
+    async function submitRating() {
+        if (!currentUser?.profileId) return;
+
+        try {
+            setSubmittingRating(true);
+
+            const response = await authFetch('/api/ratings', {
+                method: 'POST',
+                body: JSON.stringify({
+                    targetProfileId: profileId,
+                    score: rating,
+                    comment: comment || undefined
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to submit rating');
+
+            alert('Rating submitted successfully!');
+            setRatingModal(false);
+            setRating(5);
+            setComment('');
+            // Refresh average rating
+            const avgRating = await getAverageRating(profileId);
+            setAverageRating(avgRating);
+        } catch (e) {
+            alert((e as Error).message);
+        } finally {
+            setSubmittingRating(false);
+        }
+    }
+
     return (
         <div className="space-y-6">
             {/* Profile Header Card */}
@@ -119,14 +170,24 @@ export default function ProfileView({ profileId, onNavigate, onEditProfile }: Pr
                         <h1 className="text-2xl font-bold">{profile.displayName}</h1>
                         {profile.location && <p className="text-gray-600 mt-1">📍 {profile.location}</p>}
                     </div>
-                    {isOwnProfile && (
-                        <button
-                            onClick={onEditProfile}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                        >
-                            Edit Profile
-                        </button>
-                    )}
+                    <div className="flex gap-2">
+                        {!isOwnProfile && currentUser && (
+                            <button
+                                onClick={() => setRatingModal(true)}
+                                className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                            >
+                                ⭐ Rate User
+                            </button>
+                        )}
+                        {isOwnProfile && (
+                            <button
+                                onClick={onEditProfile}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Edit Profile
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Rating */}
@@ -237,6 +298,60 @@ export default function ProfileView({ profileId, onNavigate, onEditProfile }: Pr
                     <p className="text-gray-500">No active sessions</p>
                 )}
             </div>
+
+            {/* Rating Modal */}
+            {ratingModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold">Rate {profile.displayName}</h3>
+                            <button
+                                onClick={() => setRatingModal(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="mb-6">
+                            <p className="text-gray-600 mb-4">What's your rating for this user?</p>
+                            <div className="flex justify-center gap-2">
+                                {renderRatingInput(rating)}
+                            </div>
+                            <p className="text-center text-sm text-gray-600 mt-3">{rating} out of 5 stars</p>
+                        </div>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Comments (optional)
+                            </label>
+                            <textarea
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                placeholder="Share your experience..."
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                                rows={4}
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setRatingModal(false)}
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={submitRating}
+                                disabled={submittingRating}
+                                className="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:bg-gray-400 transition"
+                            >
+                                {submittingRating ? 'Submitting...' : 'Submit Rating'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

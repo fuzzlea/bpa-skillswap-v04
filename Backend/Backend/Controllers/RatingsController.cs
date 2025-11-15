@@ -26,57 +26,70 @@ namespace bpa_skillswap_v04.Controllers
         [HttpPost]
         public async Task<IActionResult> Submit([FromBody] SubmitRatingDto dto)
         {
-            if (!ModelState.IsValid) return ValidationProblem(ModelState);
-
-            var userId = _userManager.GetUserId(User);
-            var raterProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
-            if (raterProfile == null) return BadRequest("Current user must have a profile to submit ratings.");
-
-            // Ensure session exists
-            var session = await _db.Sessions.Include(s => s.Requests).FirstOrDefaultAsync(s => s.Id == dto.SessionId);
-            if (session == null) return NotFound("Session not found.");
-
-            // Ensure rater participated: either host or accepted requester
-            var isHost = session.HostProfileId == raterProfile.Id;
-            var wasAccepted = await _db.SessionRequests.AnyAsync(r => r.SessionId == dto.SessionId && r.RequesterProfileId == raterProfile.Id && r.Status == "Accepted");
-            if (!isHost && !wasAccepted) return Forbid();
-
-            // Ensure target profile is participant in session (host or accepted requester)
-            var targetIsHost = session.HostProfileId == dto.TargetProfileId;
-            var targetWasAccepted = await _db.SessionRequests.AnyAsync(r => r.SessionId == dto.SessionId && r.RequesterProfileId == dto.TargetProfileId && r.Status == "Accepted");
-            if (!targetIsHost && !targetWasAccepted) return BadRequest("Target profile did not participate in the session.");
-
-            var targetProfile = await _db.Profiles.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == dto.TargetProfileId);
-
-            var rating = new Rating
+            try
             {
-                SessionId = dto.SessionId,
-                RaterProfileId = raterProfile.Id,
-                TargetProfileId = dto.TargetProfileId,
-                Score = dto.Score,
-                Comment = dto.Comment
-            };
+                if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-            _db.Ratings.Add(rating);
-            await _db.SaveChangesAsync();
+                var userId = _userManager.GetUserId(User);
+                var raterProfile = await _db.Profiles.Include(p => p.User).FirstOrDefaultAsync(p => p.UserId == userId);
+                if (raterProfile == null) return BadRequest("Current user must have a profile to submit ratings.");
 
-            // Create notification for target profile (the user being rated)
-            var notification = new Notification
+                // Ensure target profile exists
+                var targetProfile = await _db.Profiles.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == dto.TargetProfileId);
+                if (targetProfile == null) return NotFound("Target profile not found.");
+
+                // If SessionId is provided, validate session participation
+                if (dto.SessionId.HasValue)
+                {
+                    var session = await _db.Sessions.Include(s => s.Requests).FirstOrDefaultAsync(s => s.Id == dto.SessionId);
+                    if (session == null) return NotFound("Session not found.");
+
+                    // Ensure rater participated: either host or accepted requester
+                    var isHost = session.HostProfileId == raterProfile.Id;
+                    var wasAccepted = await _db.SessionRequests.AnyAsync(r => r.SessionId == dto.SessionId && r.RequesterProfileId == raterProfile.Id && r.Status == "Accepted");
+                    if (!isHost && !wasAccepted) return Forbid();
+
+                    // Ensure target profile is participant in session (host or accepted requester)
+                    var targetIsHost = session.HostProfileId == dto.TargetProfileId;
+                    var targetWasAccepted = await _db.SessionRequests.AnyAsync(r => r.SessionId == dto.SessionId && r.RequesterProfileId == dto.TargetProfileId && r.Status == "Accepted");
+                    if (!targetIsHost && !targetWasAccepted) return BadRequest("Target profile did not participate in the session.");
+                }
+
+                var rating = new Rating
+                {
+                    SessionId = dto.SessionId,
+                    RaterProfileId = raterProfile.Id,
+                    TargetProfileId = dto.TargetProfileId,
+                    Score = dto.Score,
+                    Comment = dto.Comment
+                };
+
+                _db.Ratings.Add(rating);
+                await _db.SaveChangesAsync();
+
+                // Create notification for target profile (the user being rated)
+                var notificationContent = raterProfile.DisplayName ?? raterProfile.User?.UserName ?? "Someone";
+                var notification = new Notification
+                {
+                    UserId = targetProfile.UserId,
+                    Type = "Rating",
+                    Title = "You've Been Rated",
+                    Content = $"{notificationContent} gave you a {dto.Score}-star rating",
+                    RelatedRatingId = rating.Id,
+                    RelatedSessionId = dto.SessionId,
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _db.Notifications.Add(notification);
+                await _db.SaveChangesAsync();
+
+                // Return lightweight DTO to avoid EF navigation serialization cycles
+                return Ok(new { rating.Id, rating.SessionId, rating.RaterProfileId, rating.TargetProfileId, rating.Score, rating.Comment, rating.CreatedAt });
+            }
+            catch (Exception ex)
             {
-                UserId = targetProfile!.UserId,
-                Type = "Rating",
-                Title = "You've Been Rated",
-                Content = $"{raterProfile.DisplayName ?? raterProfile.User?.UserName} gave you a {dto.Score}-star rating",
-                RelatedRatingId = rating.Id,
-                RelatedSessionId = session.Id,
-                CreatedAt = DateTime.UtcNow,
-                IsRead = false
-            };
-            _db.Notifications.Add(notification);
-            await _db.SaveChangesAsync();
-
-            // Return lightweight DTO to avoid EF navigation serialization cycles
-            return Ok(new { rating.Id, rating.SessionId, rating.RaterProfileId, rating.TargetProfileId, rating.Score, rating.Comment, rating.CreatedAt });
+                return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
+            }
         }
 
         [HttpGet("profile/{profileId}")]
@@ -99,8 +112,7 @@ namespace bpa_skillswap_v04.Controllers
 
         public class SubmitRatingDto
         {
-            [System.ComponentModel.DataAnnotations.Required]
-            public int SessionId { get; set; }
+            public int? SessionId { get; set; }
             [System.ComponentModel.DataAnnotations.Required]
             public int TargetProfileId { get; set; }
             [System.ComponentModel.DataAnnotations.Range(1, 5)]
