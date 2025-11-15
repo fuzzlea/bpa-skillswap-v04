@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listSessions } from '../services/sessions';
 import { getProfiles } from '../services/profile';
-import { getCurrentUser } from '../services/auth';
+import { getCurrentUser, getToken } from '../services/auth';
 import { Users, BookOpen, Calendar, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function Dashboard({
@@ -17,6 +17,7 @@ export default function Dashboard({
     const [profiles, setProfiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [userProfile, setUserProfile] = useState<any>(null);
+    const isLoggedIn = !!getToken();
 
     useEffect(() => {
         load();
@@ -93,27 +94,50 @@ export default function Dashboard({
                 <div className="max-w-2xl">
                     <div className="flex items-center gap-2 mb-4">
                         <Sparkles size={24} />
-                        <span className="text-sm font-semibold opacity-90">Welcome back!</span>
+                        <span className="text-sm font-semibold opacity-90">
+                            {isLoggedIn ? 'Welcome back!' : 'Welcome to SkillSwap!'}
+                        </span>
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                        {userProfile ? `Learn & Share with ${userProfile.displayName}` : 'Master New Skills, Share Your Expertise'}
+                        {isLoggedIn && userProfile
+                            ? `Learn & Share with ${userProfile.displayName}`
+                            : 'Master New Skills, Share Your Expertise'}
                     </h1>
                     <p className="text-lg opacity-90 mb-6">
                         Connect with experts in your community. Take sessions to learn new skills or host your own.
                     </p>
                     <div className="flex gap-4 flex-wrap">
-                        <button
-                            onClick={() => onNavigate('sessions')}
-                            className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition flex items-center gap-2"
-                        >
-                            Browse Sessions <ArrowRight size={20} />
-                        </button>
-                        <button
-                            onClick={() => onNavigate('mysessions')}
-                            className="px-6 py-3 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-900 transition flex items-center gap-2 border border-blue-500"
-                        >
-                            My Sessions <ArrowRight size={20} />
-                        </button>
+                        {!isLoggedIn ? (
+                            <>
+                                <button
+                                    onClick={() => onNavigate('login')}
+                                    className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition flex items-center gap-2"
+                                >
+                                    Sign In <ArrowRight size={20} />
+                                </button>
+                                <button
+                                    onClick={() => onNavigate('register')}
+                                    className="px-6 py-3 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-900 transition flex items-center gap-2 border border-blue-500"
+                                >
+                                    Create Account <ArrowRight size={20} />
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => onNavigate('sessions')}
+                                    className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition flex items-center gap-2"
+                                >
+                                    Browse Sessions <ArrowRight size={20} />
+                                </button>
+                                <button
+                                    onClick={() => onNavigate('mysessions')}
+                                    className="px-6 py-3 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-900 transition flex items-center gap-2 border border-blue-500"
+                                >
+                                    My Sessions <ArrowRight size={20} />
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

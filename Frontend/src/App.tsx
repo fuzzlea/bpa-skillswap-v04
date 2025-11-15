@@ -16,7 +16,7 @@ import NotificationCenter from './components/NotificationCenter';
 import { getToken, logout, isAdmin, getCurrentUser } from './services/auth';
 
 function App() {
-  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'myprofile' | 'sessions' | 'mysessions' | 'managereqs' | 'myparticipations' | 'sessiondetail' | 'profileview'>(getToken() ? 'home' : 'login');
+  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'myprofile' | 'sessions' | 'mysessions' | 'managereqs' | 'myparticipations' | 'sessiondetail' | 'profileview'>('home');
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [userAdmin, setUserAdmin] = useState(isAdmin());
@@ -51,28 +51,23 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <header className="max-w-3xl mx-auto flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold cursor-pointer" onClick={() => setRoute('home')}>SkillSwap</h1>
+    <div className="min-h-screen bg-gray-100">
+      {route !== 'login' && route !== 'register' && (
+        <header className="max-w-3xl mx-auto flex justify-between items-center mb-6 p-6">
+          <h1 className="text-xl font-bold cursor-pointer" onClick={() => setRoute('home')}>SkillSwap</h1>
 
-        {!getToken() && (
-          <nav className="space-x-4 flex items-center">
-            <button onClick={() => setRoute('login')} className="text-blue-600">Login</button>
-            <button onClick={() => setRoute('register')} className="text-green-600">Register</button>
-          </nav>
-        )}
+          {getToken() && (
+            <div className="flex items-center gap-4">
+              <NotificationCenter isLoggedIn={!!getToken()} />
+              <HamburgerMenu onNavigate={handleNavigate} userAdmin={userAdmin} />
+            </div>
+          )}
+        </header>
+      )}
 
-        {getToken() && (
-          <div className="flex items-center gap-4">
-            <NotificationCenter isLoggedIn={!!getToken()} />
-            <HamburgerMenu onNavigate={handleNavigate} userAdmin={userAdmin} />
-          </div>
-        )}
-      </header>
-
-      <main className="max-w-3xl mx-auto">
-        {route === 'login' && <Login onSuccess={onLoginSuccess} />}
-        {route === 'register' && <Register onSuccess={onRegisterSuccess} />}
+      <main className={route === 'login' || route === 'register' ? '' : 'max-w-3xl mx-auto p-6'}>
+        {route === 'login' && <Login onSuccess={onLoginSuccess} onNavigate={handleNavigate} />}
+        {route === 'register' && <Register onSuccess={onRegisterSuccess} onNavigate={handleNavigate} />}
         {route === 'myprofile' && <ProfileEditor />}
         {route === 'profileview' && selectedProfileId !== null && (
           <ProfileView
@@ -85,6 +80,7 @@ function App() {
           <SessionsList
             onView={(id: number) => { setSelectedSessionId(id); setRoute('sessiondetail'); }}
             onProfile={(profileId: number) => handleNavigate('profileview', { profileId })}
+            onNavigate={handleNavigate}
           />
         )}
         {route === 'mysessions' && <MySessionsPage />}

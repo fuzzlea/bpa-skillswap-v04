@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { listSessions, requestJoin } from '../services/sessions';
+import { getToken } from '../services/auth';
 import { Search, X } from 'lucide-react';
 
 export default function SessionsList({
     onView,
-    onProfile
+    onProfile,
+    onNavigate
 }: {
     onView?: (id: number) => void;
     onProfile?: (profileId: number) => void;
+    onNavigate?: (route: string) => void;
 }) {
     const [allSessions, setAllSessions] = useState<any[]>([]);
     const [filteredSessions, setFilteredSessions] = useState<any[]>([]);
@@ -16,6 +19,7 @@ export default function SessionsList({
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'closed'>('all');
     const [skillFilter, setSkillFilter] = useState<string>('all');
+    const isLoggedIn = !!getToken();
 
     useEffect(() => { load(); }, []);
 
@@ -59,6 +63,10 @@ export default function SessionsList({
     }
 
     async function handleRequest(sessionId: number) {
+        if (!isLoggedIn) {
+            onNavigate?.('login');
+            return;
+        }
         try {
             await requestJoin(sessionId, 'Hi — I would like to join');
             alert('Request sent');
@@ -169,8 +177,8 @@ export default function SessionsList({
                                     </span>
                                 )}
                                 <span className={`px-3 py-1 text-xs font-semibold rounded-full ${s.isOpen
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-red-100 text-red-800'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
                                     }`}>
                                     {s.isOpen ? 'Open' : 'Closed'}
                                 </span>
