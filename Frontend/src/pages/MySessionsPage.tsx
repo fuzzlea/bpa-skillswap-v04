@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { listSessions, createSession, deleteSession, updateSession } from '../services/sessions';
 import { getSkills, getProfiles } from '../services/profile';
-import { getCurrentUser } from '../services/auth';
+import { getCurrentUser, getToken } from '../services/auth';
+import { Plus, MessageSquare } from 'lucide-react';
 
-export default function MySessionsPage() {
+export default function MySessionsPage({ onNavigate }: { onNavigate?: (route: string) => void; }) {
+    const isLoggedIn = !!getToken();
     const [userSessions, setUserSessions] = useState<any[]>([]);
     const [allSessions, setAllSessions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -11,6 +13,12 @@ export default function MySessionsPage() {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [userProfileId, setUserProfileId] = useState<number | null>(null);
     const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
+
+    // Redirect to login if not logged in
+    if (!isLoggedIn) {
+        setTimeout(() => onNavigate?.('login'), 0);
+        return <div className="p-6 text-center">Redirecting to login...</div>;
+    }
 
     // Form state
     const [title, setTitle] = useState('');
@@ -166,94 +174,106 @@ export default function MySessionsPage() {
     if (loading) return <div className="p-6">Loading sessions...</div>;
 
     return (
-        <div className="p-6 bg-white rounded shadow space-y-6">
-            <h2 className="text-xl font-bold">My Sessions</h2>
-
-            {error && <div className="p-3 bg-red-100 text-red-700 rounded">{error}</div>}
-
-            {/* Create Session Button / Form */}
-            {!showCreateForm ? (
-                <button
-                    onClick={() => {
-                        resetForm();
-                        setShowCreateForm(true);
-                    }}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                    Create New Session
-                </button>
-            ) : (
-                <div className="border p-4 rounded bg-gray-50">
-                    <h3 className="font-semibold mb-3">
-                        {editingSessionId !== null ? 'Edit Session' : 'Create New Session'}
-                    </h3>
-                    {formError && <div className="p-2 bg-red-100 text-red-700 rounded mb-3">{formError}</div>}
-                    <form onSubmit={handleCreate} className="space-y-3">
-                        <input
-                            className="w-full border p-2"
-                            placeholder="Title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            required
-                        />
-                        <textarea
-                            className="w-full border p-2"
-                            placeholder="Description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        />
-                        <select
-                            className="w-full border p-2"
-                            value={skillId ?? ''}
-                            onChange={(e) => setSkillId(e.target.value ? Number(e.target.value) : null)}
-                        >
-                            <option value="">-- Select skill (optional) --</option>
-                            {skills.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                    {s.name}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="flex gap-2">
-                            <input
-                                required
-                                type="datetime-local"
-                                className="border p-2 flex-1"
-                                value={scheduledAt}
-                                onChange={(e) => setScheduledAt(e.target.value)}
-                            />
-                            <input
-                                required
-                                type="number"
-                                min="1"
-                                className="border p-2 w-24"
-                                value={duration}
-                                onChange={(e) => setDuration(Number(e.target.value))}
-                            />
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                type="submit"
-                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
-                                disabled={formLoading}
-                            >
-                                {formLoading ? (editingSessionId ? 'Updating...' : 'Creating...') : (editingSessionId ? 'Update Session' : 'Create Session')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={cancelEdit}
-                                className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
+        <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold">My Sessions</h2>
+                    <button
+                        onClick={() => onNavigate?.('managereqs')}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                    >
+                        <MessageSquare size={18} />
+                        Manage Requests
+                    </button>
                 </div>
-            )}
+
+                {error && <div className="p-4 mb-4 bg-red-50 text-red-700 border border-red-200 rounded-lg">{error}</div>}
+
+                {/* Create Session Button / Form */}
+                {!showCreateForm ? (
+                    <button
+                        onClick={() => {
+                            resetForm();
+                            setShowCreateForm(true);
+                        }}
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+                    >
+                        <Plus size={18} />
+                        Create New Session
+                    </button>
+                ) : (
+                    <div className="border p-4 rounded bg-gray-50">
+                        <h3 className="font-semibold mb-3">
+                            {editingSessionId !== null ? 'Edit Session' : 'Create New Session'}
+                        </h3>
+                        {formError && <div className="p-2 bg-red-100 text-red-700 rounded mb-3">{formError}</div>}
+                        <form onSubmit={handleCreate} className="space-y-3">
+                            <input
+                                className="w-full border p-2"
+                                placeholder="Title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                required
+                            />
+                            <textarea
+                                className="w-full border p-2"
+                                placeholder="Description"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                            />
+                            <select
+                                className="w-full border p-2"
+                                value={skillId ?? ''}
+                                onChange={(e) => setSkillId(e.target.value ? Number(e.target.value) : null)}
+                            >
+                                <option value="">-- Select skill (optional) --</option>
+                                {skills.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="flex gap-2">
+                                <input
+                                    required
+                                    type="datetime-local"
+                                    className="border p-2 flex-1"
+                                    value={scheduledAt}
+                                    onChange={(e) => setScheduledAt(e.target.value)}
+                                />
+                                <input
+                                    required
+                                    type="number"
+                                    min="1"
+                                    className="border p-2 w-24"
+                                    value={duration}
+                                    onChange={(e) => setDuration(Number(e.target.value))}
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
+                                    disabled={formLoading}
+                                >
+                                    {formLoading ? (editingSessionId ? 'Updating...' : 'Creating...') : (editingSessionId ? 'Update Session' : 'Create Session')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={cancelEdit}
+                                    className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                )}
+            </div>
 
             {/* Sessions List */}
-            <div>
-                <h3 className="font-semibold mb-3">
+            <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-xl font-bold mb-4">
                     {userSessions.length === 0 ? 'No sessions created yet' : `Your Sessions (${userSessions.length})`}
                 </h3>
                 <div className="space-y-3">

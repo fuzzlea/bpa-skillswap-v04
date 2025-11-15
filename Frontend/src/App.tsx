@@ -83,7 +83,7 @@ function App() {
             onNavigate={handleNavigate}
           />
         )}
-        {route === 'mysessions' && <MySessionsPage />}
+        {route === 'mysessions' && <MySessionsPage onNavigate={handleNavigate} />}
         {route === 'managereqs' && (
           <ManageRequests onProfile={(profileId: number) => handleNavigate('profileview', { profileId })} />
         )}

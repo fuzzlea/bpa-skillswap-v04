@@ -60,12 +60,6 @@ export default function HamburgerMenu({ onNavigate, userAdmin }: { onNavigate: (
                         My Sessions
                     </button>
                     <button
-                        onClick={() => handleNavClick('managereqs')}
-                        className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    >
-                        Manage Requests
-                    </button>
-                    <button
                         onClick={() => handleNavClick('myparticipations')}
                         className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
                     >
