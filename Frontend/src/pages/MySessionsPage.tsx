@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { listSessions, createSession, deleteSession, updateSession } from '../services/sessions';
 import { getSkills, getProfiles } from '../services/profile';
 import { getCurrentUser, getToken } from '../services/auth';
-import { Plus, MessageSquare } from 'lucide-react';
+import { Plus, MessageSquare, Sliders } from 'lucide-react';
 
 export default function MySessionsPage({ onNavigate }: { onNavigate?: (route: string) => void; }) {
     const isLoggedIn = !!getToken();
@@ -294,6 +294,15 @@ export default function MySessionsPage({ onNavigate }: { onNavigate?: (route: st
                                     </div>
                                 </div>
                                 <div className="flex gap-2 ml-2">
+                                    {!s.isOpen && (
+                                        <button
+                                            onClick={() => onNavigate?.(`manage-session-${s.id}`)}
+                                            className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1"
+                                        >
+                                            <Sliders size={16} />
+                                            Manage
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => startEdit(s)}
                                         className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"

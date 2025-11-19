@@ -18,5 +18,9 @@ namespace bpa_skillswap_v04.Models
 
         // Pending, Accepted, Rejected
         public string Status { get; set; } = "Pending";
+
+        // Attendance tracking - only relevant after session completion
+        public bool HasAttended { get; set; } = false;
+        public DateTime? VerifiedAt { get; set; } = null;
     }
 }

@@ -392,24 +392,41 @@ namespace bpa_skillswap_v04.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var session = await _db.Sessions.FindAsync(id);
-            if (session == null) return NotFound();
-
-            var userId = _userManager.GetUserId(User);
-            var hostProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
-            if (hostProfile == null || session.HostProfileId != hostProfile.Id)
+            try
             {
-                return Forbid("You can only delete sessions you created.");
+                var session = await _db.Sessions.FindAsync(id);
+                if (session == null) return NotFound();
+
+                var userId = _userManager.GetUserId(User);
+                var hostProfile = await _db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
+                if (hostProfile == null || session.HostProfileId != hostProfile.Id)
+                {
+                    return Forbid("You can only delete sessions you created.");
+                }
+
+                // Delete related session requests first
+                var relatedRequests = await _db.SessionRequests.Where(r => r.SessionId == id).ToListAsync();
+                _db.SessionRequests.RemoveRange(relatedRequests);
+
+                // Delete related ratings pointing to this session
+                var relatedRatings = await _db.Ratings.Where(r => r.SessionId == id).ToListAsync();
+                _db.Ratings.RemoveRange(relatedRatings);
+
+                // Delete related notifications pointing to this session
+                var relatedNotifications = await _db.Notifications.Where(n => n.RelatedSessionId == id).ToListAsync();
+                _db.Notifications.RemoveRange(relatedNotifications);
+
+                _db.Sessions.Remove(session);
+                await _db.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            // Delete related session requests first
-            var relatedRequests = await _db.SessionRequests.Where(r => r.SessionId == id).ToListAsync();
-            _db.SessionRequests.RemoveRange(relatedRequests);
-
-            _db.Sessions.Remove(session);
-            await _db.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting session {id}: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
+            }
         }
 
         // DTOs

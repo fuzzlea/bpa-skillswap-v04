@@ -4,19 +4,19 @@ import Register from './pages/Register';
 import AdminPanel from './pages/AdminPanel';
 import ProfileEditor from './pages/ProfileEditor';
 import ProfileView from './pages/ProfileView';
-import CreateSession from './pages/CreateSession';
 import MySessionsPage from './pages/MySessionsPage';
 import SessionsList from './pages/SessionList';
 import SessionDetail from './pages/SessionDetail';
+import SessionManagement from './pages/SessionManagement';
 import ManageRequests from './pages/ManageRequests';
 import MyParticipations from './pages/MyParticipations';
 import Dashboard from './pages/Dashboard';
 import HamburgerMenu from './components/HamburgerMenu';
 import NotificationCenter from './components/NotificationCenter';
-import { getToken, logout, isAdmin, getCurrentUser } from './services/auth';
+import { getToken, isAdmin, getCurrentUser } from './services/auth';
 
 function App() {
-  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'myprofile' | 'sessions' | 'mysessions' | 'managereqs' | 'myparticipations' | 'sessiondetail' | 'profileview'>('home');
+  const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'myprofile' | 'sessions' | 'mysessions' | 'managereqs' | 'myparticipations' | 'sessiondetail' | 'profileview' | 'manage-session'>('home');
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [userAdmin, setUserAdmin] = useState(isAdmin());
@@ -46,6 +46,13 @@ function App() {
     }
     if (newRoute === 'sessiondetail' && state?.sessionId) {
       setSelectedSessionId(state.sessionId);
+    }
+    // Handle manage-session-{id} format
+    if (newRoute.startsWith('manage-session-')) {
+      const sessionId = parseInt(newRoute.replace('manage-session-', ''));
+      setSelectedSessionId(sessionId);
+      setRoute('manage-session');
+      return;
     }
     setRoute(newRoute as any);
   };
@@ -84,6 +91,12 @@ function App() {
           />
         )}
         {route === 'mysessions' && <MySessionsPage onNavigate={handleNavigate} />}
+        {route === 'manage-session' && selectedSessionId !== null && (
+          <SessionManagement
+            sessionId={selectedSessionId}
+            onNavigate={handleNavigate}
+          />
+        )}
         {route === 'managereqs' && (
           <ManageRequests onProfile={(profileId: number) => handleNavigate('profileview', { profileId })} />
         )}

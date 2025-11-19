@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using bpa_skillswap_v04.Data;
 
@@ -10,9 +11,11 @@ using bpa_skillswap_v04.Data;
 namespace Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251119162855_AddAttendanceTrackingToSessionRequest")]
+    partial class AddAttendanceTrackingToSessionRequest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -157,7 +160,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("SkillId");
 
-                    b.ToTable("ProfileSkillOffered", (string)null);
+                    b.ToTable("ProfileSkillOffered");
                 });
 
             modelBuilder.Entity("ProfileSkillWanted", b =>
@@ -172,7 +175,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("SkillId");
 
-                    b.ToTable("ProfileSkillWanted", (string)null);
+                    b.ToTable("ProfileSkillWanted");
                 });
 
             modelBuilder.Entity("bpa_skillswap_v04.Models.ApplicationUser", b =>
@@ -282,7 +285,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("bpa_skillswap_v04.Models.Profile", b =>
@@ -314,7 +317,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Profiles", (string)null);
+                    b.ToTable("Profiles");
                 });
 
             modelBuilder.Entity("bpa_skillswap_v04.Models.Rating", b =>
@@ -349,7 +352,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("TargetProfileId");
 
-                    b.ToTable("Ratings", (string)null);
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("bpa_skillswap_v04.Models.Session", b =>
@@ -386,7 +389,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("SkillId");
 
-                    b.ToTable("Sessions", (string)null);
+                    b.ToTable("Sessions");
                 });
 
             modelBuilder.Entity("bpa_skillswap_v04.Models.SessionRequest", b =>
@@ -423,7 +426,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("SessionId");
 
-                    b.ToTable("SessionRequests", (string)null);
+                    b.ToTable("SessionRequests");
                 });
 
             modelBuilder.Entity("bpa_skillswap_v04.Models.Skill", b =>
@@ -438,7 +441,7 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Skills", (string)null);
+                    b.ToTable("Skills");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
