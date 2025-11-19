@@ -51,7 +51,18 @@ export default function ProfileView({ profileId, onNavigate, onEditProfile }: Pr
                 setLoading(true);
                 const currentUser = getCurrentUser();
                 const profileData = await getProfile(profileId);
-                setProfile(profileData);
+                // Ensure displayName is always set
+                const normalizedProfile: ProfileData = {
+                    ...profileData,
+                    displayName: profileData.displayName || 'Unnamed User',
+                    bio: profileData.bio || '',
+                    location: profileData.location || '',
+                    contact: profileData.contact || '',
+                    availability: profileData.availability || '',
+                    skillsOffered: profileData.skillsOffered || [],
+                    skillsWanted: profileData.skillsWanted || [],
+                };
+                setProfile(normalizedProfile);
 
                 // Check if this is the user's own profile
                 if (currentUser?.profileId === profileId) {
@@ -71,7 +82,7 @@ export default function ProfileView({ profileId, onNavigate, onEditProfile }: Pr
                     const response = await fetch(`/api/sessions/profile/${profileId}/active`);
                     if (response.ok) {
                         const data = await response.json();
-                        // Handle both camelCase and PascalCase property names from backend
+                        // Normalize camelCase/PascalCase properties from the backend
                         const normalizedSessions = data.map((session: any) => ({
                             id: session.id || session.Id,
                             title: session.title || session.Title,

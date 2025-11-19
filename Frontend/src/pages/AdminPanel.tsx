@@ -3,7 +3,7 @@ import type { User } from '../services/admin';
 import { getAllUsers, addUser, deleteUser, toggleAdminRole, getSummary } from '../services/admin';
 import { getProfiles } from '../services/profile';
 import { getRatingsForProfile, getAverageRating } from '../services/ratings';
-import { Users, Plus, Trash2, Shield, AlertCircle } from 'lucide-react';
+import { Users, Plus, Shield, AlertCircle } from 'lucide-react';
 
 export default function AdminPanel() {
     const [users, setUsers] = useState<User[]>([]);
@@ -189,8 +189,8 @@ export default function AdminPanel() {
                     <button
                         onClick={() => setActiveTab('users')}
                         className={`px-6 py-4 font-semibold transition ${activeTab === 'users'
-                                ? 'border-b-2 border-blue-600 text-blue-600'
-                                : 'text-gray-600 hover:text-gray-900'
+                            ? 'border-b-2 border-blue-600 text-blue-600'
+                            : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         User Management
@@ -198,8 +198,8 @@ export default function AdminPanel() {
                     <button
                         onClick={() => setActiveTab('profiles')}
                         className={`px-6 py-4 font-semibold transition ${activeTab === 'profiles'
-                                ? 'border-b-2 border-blue-600 text-blue-600'
-                                : 'text-gray-600 hover:text-gray-900'
+                            ? 'border-b-2 border-blue-600 text-blue-600'
+                            : 'text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         All Profiles

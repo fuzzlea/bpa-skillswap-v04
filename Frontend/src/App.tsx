@@ -13,7 +13,7 @@ import MyParticipations from './pages/MyParticipations';
 import Dashboard from './pages/Dashboard';
 import HamburgerMenu from './components/HamburgerMenu';
 import NotificationCenter from './components/NotificationCenter';
-import { getToken, isAdmin, getCurrentUser } from './services/auth';
+import { getToken, isAdmin } from './services/auth';
 
 function App() {
   const [route, setRoute] = useState<'login' | 'register' | 'home' | 'admin' | 'myprofile' | 'sessions' | 'mysessions' | 'managereqs' | 'myparticipations' | 'sessiondetail' | 'profileview' | 'manage-session'>('home');
@@ -22,10 +22,8 @@ function App() {
   const [userAdmin, setUserAdmin] = useState(isAdmin());
 
   useEffect(() => {
-    // Re-check admin status whenever route changes (e.g., after login)
+    // Re-check admin status after route changes (e.g., post-login)
     setUserAdmin(isAdmin());
-    const currentUser = getCurrentUser();
-    console.log('Current user:', currentUser); // Debug log
   }, [route]);
 
   const onLoginSuccess = () => {
@@ -47,7 +45,7 @@ function App() {
     if (newRoute === 'sessiondetail' && state?.sessionId) {
       setSelectedSessionId(state.sessionId);
     }
-    // Handle manage-session-{id} format
+    // Parse manage-session-{id} route format
     if (newRoute.startsWith('manage-session-')) {
       const sessionId = parseInt(newRoute.replace('manage-session-', ''));
       setSelectedSessionId(sessionId);

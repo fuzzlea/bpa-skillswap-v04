@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getToken } from '../services/auth';
 import { CheckCircle, XCircle, MessageSquare, Trash2, Clock } from 'lucide-react';
 
@@ -162,7 +162,7 @@ export default function SessionManagement({
                     <p className="text-gray-600">No accepted attendees yet</p>
                 ) : (
                     <div className="space-y-3">
-                        {session.attendees.map((attendee, index) => (
+                        {session.attendees.map((attendee) => (
                             <div
                                 key={attendee.id}
                                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition animate-fade-in-up"
@@ -199,8 +199,8 @@ export default function SessionManagement({
                                         onClick={() => handleVerifyAttendance(attendee.id, attendee.hasAttended)}
                                         disabled={actionLoading === attendee.id}
                                         className={`px-3 py-2 rounded text-sm font-medium transition ${attendee.hasAttended
-                                                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                : 'bg-green-600 text-white hover:bg-green-700'
+                                            ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                            : 'bg-green-600 text-white hover:bg-green-700'
                                             } disabled:opacity-50`}
                                     >
                                         {actionLoading === attendee.id ? '...' : attendee.hasAttended ? 'Unverify' : 'Verify'}

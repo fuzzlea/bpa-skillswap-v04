@@ -25,13 +25,10 @@ export default function NotificationCenter({ isLoggedIn }: NotificationCenterPro
 
     const fetchNotifications = async () => {
         try {
-            console.log('Fetching notifications...');
             const data = await getNotifications();
-            console.log('Notifications fetched:', data);
             setNotifications(data);
 
             const count = await getUnreadCount();
-            console.log('Unread count:', count);
             setUnreadCount(count);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
