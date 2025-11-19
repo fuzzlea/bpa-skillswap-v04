@@ -130,7 +130,7 @@ export default function NotificationCenter({ isLoggedIn }: NotificationCenterPro
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto animate-slide-in-down">
                     <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                         <h3 className="font-semibold text-gray-900">Notifications</h3>
                         <button
@@ -147,10 +147,10 @@ export default function NotificationCenter({ isLoggedIn }: NotificationCenterPro
                         </div>
                     ) : (
                         <div className="divide-y divide-gray-200">
-                            {notifications.map(notif => (
+                            {notifications.map((notif) => (
                                 <div
                                     key={notif.id}
-                                    className={`p-4 hover:bg-gray-50 transition-colors ${!notif.isRead ? 'bg-blue-50' : ''}`}
+                                    className={`p-4 hover:bg-gray-50 transition-colors animate-fade-in ${!notif.isRead ? 'bg-blue-50' : ''}`}
                                 >
                                     <div className="flex items-start gap-3">
                                         <span className="text-lg shrink-0">

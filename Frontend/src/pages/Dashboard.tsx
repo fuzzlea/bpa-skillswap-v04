@@ -90,23 +90,23 @@ export default function Dashboard({
     return (
         <div className="space-y-8">
             {/* Hero Section */}
-            <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white rounded-lg p-8 md:p-12">
+            <div className="bg-linear-to-r from-blue-600 to-blue-800 text-white rounded-lg p-8 md:p-12 animate-fade-in-down">
                 <div className="max-w-2xl">
                     <div className="flex items-center gap-2 mb-4">
-                        <Sparkles size={24} />
-                        <span className="text-sm font-semibold opacity-90">
+                        <Sparkles size={24} className="animate-bounce-in" />
+                        <span className="text-sm font-semibold opacity-90 animate-fade-in">
                             {isLoggedIn ? 'Welcome back!' : 'Welcome to SkillSwap!'}
                         </span>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4 animate-fade-in-up">
                         {isLoggedIn && userProfile
                             ? `Learn & Share with ${userProfile.displayName}`
                             : 'Master New Skills, Share Your Expertise'}
                     </h1>
-                    <p className="text-lg opacity-90 mb-6">
+                    <p className="text-lg opacity-90 mb-6 animate-fade-in-up">
                         Connect with experts in your community. Take sessions to learn new skills or host your own.
                     </p>
-                    <div className="flex gap-4 flex-wrap">
+                    <div className="flex gap-4 flex-wrap animate-fade-in-up">
                         {!isLoggedIn ? (
                             <>
                                 <button
@@ -145,7 +145,7 @@ export default function Dashboard({
             {/* Stats Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {stats.map((stat, index) => (
-                    <div key={index} className={`${stat.color} rounded-lg p-6`}>
+                    <div key={index} className={`${stat.color} rounded-lg p-6 animate-scale-in`}>
                         <div className="flex items-center gap-4">
                             <div>{stat.icon}</div>
                             <div>

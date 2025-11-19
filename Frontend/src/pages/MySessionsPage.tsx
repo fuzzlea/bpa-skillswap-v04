@@ -177,17 +177,17 @@ export default function MySessionsPage({ onNavigate }: { onNavigate?: (route: st
         <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">My Sessions</h2>
+                    <h2 className="text-2xl font-bold animate-fade-in-down">My Sessions</h2>
                     <button
                         onClick={() => onNavigate?.('managereqs')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 animate-fade-in"
                     >
                         <MessageSquare size={18} />
                         Manage Requests
                     </button>
                 </div>
 
-                {error && <div className="p-4 mb-4 bg-red-50 text-red-700 border border-red-200 rounded-lg">{error}</div>}
+                {error && <div className="p-4 mb-4 bg-red-50 text-red-700 border border-red-200 rounded-lg animate-fade-in">{error}</div>}
 
                 {/* Create Session Button / Form */}
                 {!showCreateForm ? (
@@ -196,17 +196,17 @@ export default function MySessionsPage({ onNavigate }: { onNavigate?: (route: st
                             resetForm();
                             setShowCreateForm(true);
                         }}
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2 animate-fade-in-up"
                     >
                         <Plus size={18} />
                         Create New Session
                     </button>
                 ) : (
-                    <div className="border p-4 rounded bg-gray-50">
+                    <div className="border p-4 rounded bg-gray-50 animate-slide-in-down">
                         <h3 className="font-semibold mb-3">
                             {editingSessionId !== null ? 'Edit Session' : 'Create New Session'}
                         </h3>
-                        {formError && <div className="p-2 bg-red-100 text-red-700 rounded mb-3">{formError}</div>}
+                        {formError && <div className="p-2 bg-red-100 text-red-700 rounded mb-3 animate-fade-in">{formError}</div>}
                         <form onSubmit={handleCreate} className="space-y-3">
                             <input
                                 className="w-full border p-2"
@@ -272,13 +272,13 @@ export default function MySessionsPage({ onNavigate }: { onNavigate?: (route: st
             </div>
 
             {/* Sessions List */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-bold mb-4">
+            <div className="bg-white rounded-lg shadow-md p-6 animate-fade-in-up">
+                <h3 className="text-xl font-bold mb-4 animate-fade-in-down">
                     {userSessions.length === 0 ? 'No sessions created yet' : `Your Sessions (${userSessions.length})`}
                 </h3>
                 <div className="space-y-3">
                     {userSessions.map((s) => (
-                        <div key={s.id} className="border p-4 rounded hover:bg-gray-50">
+                        <div key={s.id} className="border p-4 rounded hover:bg-gray-50 animate-fade-in-up">
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
                                     <div className="font-semibold text-lg">{s.title}</div>
@@ -297,7 +297,7 @@ export default function MySessionsPage({ onNavigate }: { onNavigate?: (route: st
                                     {!s.isOpen && (
                                         <button
                                             onClick={() => onNavigate?.(`manage-session-${s.id}`)}
-                                            className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1"
+                                            className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1 transition hover:scale-105"
                                         >
                                             <Sliders size={16} />
                                             Manage
@@ -305,13 +305,13 @@ export default function MySessionsPage({ onNavigate }: { onNavigate?: (route: st
                                     )}
                                     <button
                                         onClick={() => startEdit(s)}
-                                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition hover:scale-105"
                                     >
                                         Edit
                                     </button>
                                     <button
                                         onClick={() => handleDelete(s.id)}
-                                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition hover:scale-105"
                                     >
                                         Delete
                                     </button>

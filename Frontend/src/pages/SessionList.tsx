@@ -85,8 +85,8 @@ export default function SessionsList({
     );
 
     return (
-        <div className="p-6 bg-white rounded shadow">
-            <h2 className="text-xl font-bold mb-6">Browse Sessions</h2>
+        <div className="p-6 bg-white rounded shadow animate-fade-in">
+            <h2 className="text-xl font-bold mb-6 animate-fade-in-down">Browse Sessions</h2>
 
             {/* Search and Filters */}
             <div className="mb-6 space-y-4">
@@ -167,8 +167,8 @@ export default function SessionsList({
                         {allSessions.length === 0 ? 'No sessions available' : 'No sessions match your filters'}
                     </div>
                 ) : (
-                    filteredSessions.map(s => (
-                        <div key={s.id} className="border border-gray-200 p-4 rounded-lg hover:shadow-md transition">
+                    filteredSessions.map((s) => (
+                        <div key={s.id} className="border border-gray-200 p-4 rounded-lg hover:shadow-md transition animate-fade-in-up">
                             {/* Tags */}
                             <div className="flex flex-wrap gap-2 mb-3">
                                 {s.skill && (

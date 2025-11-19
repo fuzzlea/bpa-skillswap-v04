@@ -117,14 +117,14 @@ export default function SessionManagement({
     const isSessionPast = sessionDate < new Date();
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
             {/* Header */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-                <h1 className="text-3xl font-bold mb-2">{session.title}</h1>
+            <div className="bg-white rounded-lg shadow-md p-6 animate-fade-in-down">
+                <h1 className="text-3xl font-bold mb-2 animate-fade-in-up">{session.title}</h1>
                 {session.description && (
-                    <p className="text-gray-600 mb-4">{session.description}</p>
+                    <p className="text-gray-600 mb-4 animate-fade-in-up">{session.description}</p>
                 )}
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                <div className="flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in-up">
                     <div className="flex items-center gap-1">
                         <Clock size={16} />
                         {sessionDate.toLocaleString()}
@@ -135,43 +135,37 @@ export default function SessionManagement({
             </div>
 
             {error && (
-                <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg">
+                <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg animate-fade-in">
                     {error}
                 </div>
             )}
 
             {/* Attendance Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-gray-600 text-sm">Total Attendees</div>
-                    <div className="text-3xl font-bold">{session.totalAttendees}</div>
-                </div>
-                <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-gray-600 text-sm">Verified Attendance</div>
-                    <div className="text-3xl font-bold text-green-600">
-                        {session.verifiedAttendees}/{session.totalAttendees}
+                {[
+                    { label: 'Total Attendees', value: session.totalAttendees, color: 'text-blue-600' },
+                    { label: 'Verified Attendance', value: `${session.verifiedAttendees}/${session.totalAttendees}`, color: 'text-green-600' },
+                    { label: 'Session Status', value: isSessionPast ? 'Completed' : 'Upcoming', color: isSessionPast ? 'text-blue-600' : 'text-yellow-600' }
+                ].map((item, index) => (
+                    <div key={index} className={`bg-white rounded-lg shadow p-4 animate-scale-in`}>
+                        <div className="text-gray-600 text-sm">{item.label}</div>
+                        <div className={`text-3xl font-bold ${item.color}`}>{item.value}</div>
                     </div>
-                </div>
-                <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-gray-600 text-sm">Session Status</div>
-                    <div className={`text-lg font-bold ${isSessionPast ? 'text-blue-600' : 'text-yellow-600'}`}>
-                        {isSessionPast ? 'Completed' : 'Upcoming'}
-                    </div>
-                </div>
+                ))}
             </div>
 
             {/* Attendees List */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold mb-4">Attendees</h2>
+            <div className="bg-white rounded-lg shadow-md p-6 animate-fade-in-up">
+                <h2 className="text-2xl font-bold mb-4 animate-fade-in-down">Attendees</h2>
 
                 {session.attendees.length === 0 ? (
                     <p className="text-gray-600">No accepted attendees yet</p>
                 ) : (
                     <div className="space-y-3">
-                        {session.attendees.map((attendee) => (
+                        {session.attendees.map((attendee, index) => (
                             <div
                                 key={attendee.id}
-                                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition animate-fade-in-up"
                             >
                                 <div className="flex-1">
                                     <div className="font-semibold">{attendee.attendeeDisplayName}</div>
@@ -204,11 +198,10 @@ export default function SessionManagement({
                                     <button
                                         onClick={() => handleVerifyAttendance(attendee.id, attendee.hasAttended)}
                                         disabled={actionLoading === attendee.id}
-                                        className={`px-3 py-2 rounded text-sm font-medium transition ${
-                                            attendee.hasAttended
+                                        className={`px-3 py-2 rounded text-sm font-medium transition ${attendee.hasAttended
                                                 ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                                 : 'bg-green-600 text-white hover:bg-green-700'
-                                        } disabled:opacity-50`}
+                                            } disabled:opacity-50`}
                                     >
                                         {actionLoading === attendee.id ? '...' : attendee.hasAttended ? 'Unverify' : 'Verify'}
                                     </button>
@@ -224,7 +217,7 @@ export default function SessionManagement({
 
                                     {/* Kick Button with Confirmation */}
                                     {confirmKick === attendee.id ? (
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 animate-scale-in">
                                             <button
                                                 onClick={() => handleKickAttendee(attendee.id)}
                                                 disabled={actionLoading === attendee.id}
@@ -242,7 +235,7 @@ export default function SessionManagement({
                                     ) : (
                                         <button
                                             onClick={() => setConfirmKick(attendee.id)}
-                                            className="p-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                            className="p-2 bg-red-600 text-white rounded hover:bg-red-700 transition hover:scale-110"
                                             title="Remove attendee"
                                         >
                                             <Trash2 size={18} />
